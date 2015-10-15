@@ -7,8 +7,8 @@ RSpec.describe BGPMessage do
     # https://www.cloudshark.org/captures/004f81c952b7
     # and at RFC https://www.ietf.org/rfc/rfc4271.txt
     let(:raw_packet_data) { nil }
-    let(:valid_bgp_marker) { ([0xff] * 16).pack("C" * 16).force_encoding('UTF-8') }
-    let(:invalid_bgp_marker) { ([0xff] * 8 + [0x12] + [0xff] * 7).pack("C" * 16).force_encoding('UTF-8') }
+    let(:valid_bgp_marker) { ([0xff] * 16).pack("C" * 16) }
+    let(:invalid_bgp_marker) { ([0xff] * 8 + [0x12] + [0xff] * 7).pack("C" * 16) }
     subject(:message) { BGPMessage.build_from_packet(raw_packet_data) }
 
     context 'without all 0xFF in the first 16 bytes data' do
@@ -21,13 +21,13 @@ RSpec.describe BGPMessage do
     end
 
     context 'with an open message' do
-      let(:packet_length) { [29].pack('S>').force_encoding('UTF-8') }
-      let(:message_type) { [1].pack('C').force_encoding('UTF-8') }
-      let(:bgp_version) { [4].pack('C').force_encoding('UTF-8') }
-      let(:sender_as) { [30].pack('S>').force_encoding('UTF-8') }
-      let(:hold_time) { [180].pack('S>').force_encoding('UTF-8') }
-      let(:sender_id) { [10, 0, 0, 9].pack('CCCC').force_encoding('UTF-8') }
-      let(:optional_parameters_length) { [0].pack('C').force_encoding('UTF-8') }
+      let(:packet_length) { [29].pack('S>') }
+      let(:message_type) { [1].pack('C') }
+      let(:bgp_version) { [4].pack('C') }
+      let(:sender_as) { [30].pack('S>') }
+      let(:hold_time) { [180].pack('S>') }
+      let(:sender_id) { [10, 0, 0, 9].pack('CCCC') }
+      let(:optional_parameters_length) { [0].pack('C') }
       let(:optional_parameters) { '' }
       let(:open_packet) {
         valid_bgp_marker +
@@ -47,7 +47,7 @@ RSpec.describe BGPMessage do
       end
 
       context 'with bad length' do
-        let(:packet_length) { [28].pack('S>').force_encoding('UTF-8') }
+        let(:packet_length) { [28].pack('S>') }
         let(:raw_packet_data) { open_packet }
         
         it 'throws an exception with :bgp_open_bad_length' do
@@ -58,7 +58,7 @@ RSpec.describe BGPMessage do
       end
 
       context 'with bad version' do
-        let(:bgp_version) { [9].pack('C').force_encoding('UTF-8') }
+        let(:bgp_version) { [9].pack('C') }
         let(:raw_packet_data) { open_packet }
         
         it 'throws an exception with :bgp_open_bad_version' do
@@ -70,7 +70,7 @@ RSpec.describe BGPMessage do
 
       context 'with bad hold time' do
         # The Hold Time MUST be either zero or at least three seconds
-        let(:hold_time) { [2].pack('S>').force_encoding('UTF-8') }
+        let(:hold_time) { [2].pack('S>') }
         let(:raw_packet_data) { open_packet }
         
         it 'throws an exception with :bgp_open_bad_hold_time' do
@@ -81,7 +81,7 @@ RSpec.describe BGPMessage do
       end
 
       context 'with bad optional parameters length' do
-        let(:optional_parameters_length) { [3].pack('C').force_encoding('UTF-8') }
+        let(:optional_parameters_length) { [3].pack('C') }
         let(:raw_packet_data) { open_packet }
         
         it 'throws an exception with :bgp_open_bad_optional_parameters_length' do
