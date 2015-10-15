@@ -1,3 +1,11 @@
+class BGPMessageError < StandardError
+  attr_reader :suberror
+
+  def initialize(suberror)
+    @suberror = suberror
+  end
+end
+
 class BGPMessage
   @@subclasses = { }
   # extract word in big endian: substr.unpack('n')[0]
@@ -33,11 +41,19 @@ class BGPMessageOpen < BGPMessage
   def self.build_from_packet(raw_packet_data)
     marker, packet_length, message_type, bgp_version, sender_as,
       hold_time, sender_id, optional_parameters_length,
-      optional_paramters = raw_packet_data.unpack('a16' +
+      optional_parameters = raw_packet_data.unpack('a16' +
         'S>' + 'C' + 'C' + 'S>' + 'S>' + 'a4' + 'C' + 'a*')
-    raise ArgumentError, 'packet length is too short' if packet_length < MINIMUM_PACKET_LENGTH
-    raise ArgumentError, 'optional parameters length is off' if optional_parameters_length != packet_length - MINIMUM_PACKET_LENGTH
-    BGPMessageOpen.new
+    if packet_length < MINIMUM_PACKET_LENGTH
+      raise BGPMessageError.new(:bgp_open_bad_length), 'packet length is too short'
+    elsif optional_parameters_length != packet_length - MINIMUM_PACKET_LENGTH
+      raise BGPMessageError.new(:bgp_open_bad_optional_parameters_length), 'optional parameters length is off'
+    elsif bgp_version != 4
+      raise BGPMessageError.new(:bgp_open_bad_version), 'BGP version must be 4'
+    elsif !( hold_time == 0 || hold_time >= 3)
+      raise BGPMessageError.new(:bgp_open_bad_hold_time), 'Hold time must be 0 or at least 3 seconds'
+    else
+      BGPMessageOpen.new
+    end
   end
 end
 

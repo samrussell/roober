@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'bgp_message'
 
 RSpec.describe BGPMessage do
-  describe '#build_from_packet' do
+  describe '.build_from_packet' do
     # packet samples found at http://packetlife.net/captures/protocol/bgp/
     # https://www.cloudshark.org/captures/004f81c952b7
     # and at RFC https://www.ietf.org/rfc/rfc4271.txt
@@ -20,7 +20,7 @@ RSpec.describe BGPMessage do
       end
     end
 
-    context 'with a valid open message' do
+    context 'with an open message' do
       let(:packet_length) { [29].pack('S>').force_encoding('UTF-8') }
       let(:message_type) { [1].pack('C').force_encoding('UTF-8') }
       let(:bgp_version) { [4].pack('C').force_encoding('UTF-8') }
@@ -29,7 +29,8 @@ RSpec.describe BGPMessage do
       let(:sender_id) { [10, 0, 0, 9].pack('CCCC').force_encoding('UTF-8') }
       let(:optional_parameters_length) { [0].pack('C').force_encoding('UTF-8') }
       let(:optional_parameters) { '' }
-      let(:valid_open_packet) { valid_bgp_marker +
+      let(:open_packet) {
+        valid_bgp_marker +
         packet_length +
         message_type +
         bgp_version +
@@ -39,34 +40,55 @@ RSpec.describe BGPMessage do
         optional_parameters_length +
         optional_parameters
       }
-      let(:raw_packet_data) { valid_open_packet }
-      
-      it { is_expected.to be_a_kind_of BGPMessageOpen }
-    end
+      let(:raw_packet_data) { open_packet }
 
-    context 'with an invalid open message with bad length' do
-      let(:packet_bad_length) { [28].pack('S>').force_encoding('UTF-8') }
-      let(:message_type) { [1].pack('C').force_encoding('UTF-8') }
-      let(:bgp_version) { [4].pack('C').force_encoding('UTF-8') }
-      let(:sender_as) { [30].pack('S>').force_encoding('UTF-8') }
-      let(:hold_time) { [180].pack('S>').force_encoding('UTF-8') }
-      let(:sender_id) { [10, 0, 0, 9].pack('CCCC').force_encoding('UTF-8') }
-      let(:optional_parameters_length) { [0].pack('C').force_encoding('UTF-8') }
-      let(:optional_parameters) { '' }
-      let(:invalid_open_packet_bad_length) { valid_bgp_marker +
-        packet_bad_length +
-        message_type +
-        bgp_version +
-        sender_as +
-        hold_time +
-        sender_id +
-        optional_parameters_length +
-        optional_parameters
-      }
-      let(:raw_packet_data) { invalid_open_packet_bad_length }
-      
-      it 'throws an exception' do
-        expect { BGPMessage.build_from_packet(raw_packet_data) }.to raise_error ArgumentError
+      context 'with valid parameters' do
+        it { is_expected.to be_a_kind_of BGPMessageOpen }
+      end
+
+      context 'with bad length' do
+        let(:packet_length) { [28].pack('S>').force_encoding('UTF-8') }
+        let(:raw_packet_data) { open_packet }
+        
+        it 'throws an exception with :bgp_open_bad_length' do
+          expect { BGPMessage.build_from_packet(raw_packet_data) }.to raise_error do |error|
+            expect(error.suberror).to eq(:bgp_open_bad_length)
+          end
+        end
+      end
+
+      context 'with bad version' do
+        let(:bgp_version) { [9].pack('C').force_encoding('UTF-8') }
+        let(:raw_packet_data) { open_packet }
+        
+        it 'throws an exception with :bgp_open_bad_version' do
+          expect { BGPMessage.build_from_packet(raw_packet_data) }.to raise_error do |error|
+            expect(error.suberror).to eq(:bgp_open_bad_version)
+          end
+        end
+      end
+
+      context 'with bad hold time' do
+        # The Hold Time MUST be either zero or at least three seconds
+        let(:hold_time) { [2].pack('S>').force_encoding('UTF-8') }
+        let(:raw_packet_data) { open_packet }
+        
+        it 'throws an exception with :bgp_open_bad_hold_time' do
+          expect { BGPMessage.build_from_packet(raw_packet_data) }.to raise_error do |error|
+            expect(error.suberror).to eq(:bgp_open_bad_hold_time)
+          end
+        end
+      end
+
+      context 'with bad optional parameters length' do
+        let(:optional_parameters_length) { [3].pack('C').force_encoding('UTF-8') }
+        let(:raw_packet_data) { open_packet }
+        
+        it 'throws an exception with :bgp_open_bad_optional_parameters_length' do
+          expect { BGPMessage.build_from_packet(raw_packet_data) }.to raise_error do |error|
+            expect(error.suberror).to eq(:bgp_open_bad_optional_parameters_length)
+          end
+        end
       end
     end
 
