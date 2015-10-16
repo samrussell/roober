@@ -52,7 +52,7 @@ class BGPMessageOpen < BGPMessage
     elsif !( hold_time == 0 || hold_time >= 3)
       raise BGPMessageError.new(:bgp_open_bad_hold_time), 'Hold time must be 0 or at least 3 seconds'
     else
-      BGPMessageOpen.new
+      new
     end
   end
 end
@@ -61,6 +61,6 @@ class BGPMessageKeepalive < BGPMessage
   register_subclass 4
 
   def self.build_from_packet(raw_packet_data)
-    BGPMessageKeepalive.new
+    new
   end
 end

@@ -44,6 +44,10 @@ RSpec.describe BGPMessage do
 
       context 'with valid parameters' do
         it { is_expected.to be_a_kind_of BGPMessageOpen }
+
+        #TODO test all the parameters
+        
+        #TODO expect parameters to be returned
       end
 
       context 'with bad length' do
