@@ -8,7 +8,7 @@ end
 
 class BGPMessage
   @@subclasses = { }
-  # extract word in big endian: substr.unpack('n')[0]
+
   def self.build_from_packet(raw_packet_data)
     marker, length, message_type = raw_packet_data.unpack('A16S>C')
     check_header_is_valid(raw_packet_data)
@@ -34,6 +34,13 @@ class BGPMessage
 end
 
 class BGPMessageOpen < BGPMessage
+  ERROR_MESSAGES = {
+    bgp_open_bad_length: 'packet length is too short',
+    bgp_open_bad_optional_parameters_length: 'optional parameters length is off',
+    bgp_open_bad_version: 'BGP version must be 4',
+    bgp_open_bad_hold_time: 'Hold time must be 0 or at least 3 seconds'
+  }
+
   MINIMUM_PACKET_LENGTH = 29
 
   register_subclass 1
@@ -43,17 +50,24 @@ class BGPMessageOpen < BGPMessage
       hold_time, sender_id, optional_parameters_length,
       optional_parameters = raw_packet_data.unpack('a16' +
         'S>' + 'C' + 'C' + 'S>' + 'S>' + 'a4' + 'C' + 'a*')
+
     if packet_length < MINIMUM_PACKET_LENGTH
-      raise BGPMessageError.new(:bgp_open_bad_length), 'packet length is too short'
+      raise_error(:bgp_open_bad_length)
     elsif optional_parameters_length != packet_length - MINIMUM_PACKET_LENGTH
-      raise BGPMessageError.new(:bgp_open_bad_optional_parameters_length), 'optional parameters length is off'
+      raise_error(:bgp_open_bad_optional_parameters_length)
     elsif bgp_version != 4
-      raise BGPMessageError.new(:bgp_open_bad_version), 'BGP version must be 4'
+      raise_error(:bgp_open_bad_version)
     elsif !( hold_time == 0 || hold_time >= 3)
-      raise BGPMessageError.new(:bgp_open_bad_hold_time), 'Hold time must be 0 or at least 3 seconds'
+      raise_error(:bgp_open_bad_hold_time)
     else
       new
     end
+  end
+
+  private
+
+  def self.raise_error(error)
+    raise BGPMessageError.new(error), ERROR_MESSAGES[error]
   end
 end
 
