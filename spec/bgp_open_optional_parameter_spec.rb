@@ -47,17 +47,5 @@ RSpec.describe BGPOpenOptionalParameter do
           )
       end
     end
-
-    #TODO test with bad length
-    context 'with bad length' do
-      let(:optional_parameter3_length) { [1].pack('C') }
-
-      it 'throws an error' do
-        #TODO catch a specific error
-        expect {
-          BGPOpenOptionalParameter.build_from_packet(optional_parameters_block)
-        }.to raise_error TypeError
-      end
-    end
   end
 end
