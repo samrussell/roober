@@ -45,28 +45,44 @@ class BGPMessageOpen < BGPMessage
 
   register_subclass 1
 
-  def self.build_from_packet(raw_packet_data)
-    marker, packet_length, message_type, bgp_version, sender_as,
-      hold_time, sender_id, optional_parameters_length,
-      optional_parameters = raw_packet_data.unpack('a16' +
-        'S>' + 'C' + 'C' + 'S>' + 'S>' + 'a4' + 'C' + 'a*')
+  def initialize(marker, packet_length, message_type,
+                 bgp_version, sender_as, hold_time,
+                 sender_id, optional_parameters_length,
+                 optional_parameters)
+    @marker = marker
+    @packet_length = packet_length
+    @message_type = message_type
+    @bgp_version = bgp_version
+    @sender_as = sender_as
+    @hold_time = hold_time
+    @sender_id = sender_id
+    @optional_parameters_length = optional_parameters_length
+    @optional_parameters = optional_parameters
 
-    if packet_length < MINIMUM_PACKET_LENGTH
-      raise_error(:bgp_open_bad_length)
-    elsif optional_parameters_length != packet_length - MINIMUM_PACKET_LENGTH
-      raise_error(:bgp_open_bad_optional_parameters_length)
-    elsif bgp_version != 4
-      raise_error(:bgp_open_bad_version)
-    elsif !( hold_time == 0 || hold_time >= 3)
-      raise_error(:bgp_open_bad_hold_time)
-    else
-      new
-    end
+    validate_parameters
+  end
+
+  def self.build_from_packet(raw_packet_data)
+    new(*raw_packet_data.unpack('a16' +
+        'S>' + 'C' + 'C' + 'S>' + 'S>' + 'a4' + 'C' + 'a*')
+       )
   end
 
   private
 
-  def self.raise_error(error)
+  def validate_parameters
+    if @packet_length < MINIMUM_PACKET_LENGTH
+      raise_error(:bgp_open_bad_length)
+    elsif @optional_parameters_length != @packet_length - MINIMUM_PACKET_LENGTH
+      raise_error(:bgp_open_bad_optional_parameters_length)
+    elsif @bgp_version != 4
+      raise_error(:bgp_open_bad_version)
+    elsif !(@hold_time == 0 || @hold_time >= 3)
+      raise_error(:bgp_open_bad_hold_time)
+    end
+  end
+
+  def raise_error(error)
     raise BGPMessageError.new(error), ERROR_MESSAGES[error]
   end
 end
