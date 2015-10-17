@@ -43,9 +43,6 @@ RSpec.describe BGPMessage do
       let(:raw_packet_data) { open_packet }
 
       context 'with valid parameters' do
-        it { is_expected.to be_a_kind_of BGPMessageOpen }
-
-        #TODO test all the parameters
         it 'unpacks all the parameters correctly' do
           expect(message.packet_length).to eq(29)
           expect(message.message_type).to eq(1)
@@ -55,8 +52,6 @@ RSpec.describe BGPMessage do
           expect(message.sender_id).to eq([10, 0, 0, 9].pack('CCCC'))
           expect(message.optional_parameters).to eq([])
         end
-        
-        #TODO expect parameters to be returned
       end
 
       context 'with bad length' do
@@ -102,6 +97,41 @@ RSpec.describe BGPMessage do
             expect(error.suberror).to eq(:bgp_open_bad_optional_parameters_length)
           end
         end
+      end
+    end
+
+    context 'with an update messge' do
+      let(:packet_length) { [67].pack('S>') }
+      let(:message_type) { [2].pack('C') }
+      let(:withdrawn_routes_length) { [0].pack('S>') }
+      let(:withdrawn_routes) { '' }
+      let(:path_attributes_length) { [40].pack('S>') }
+      let(:path_attributes) { "\x02\x40\x02\x0a\x02\x01\x00\x1e\x01\x02\x00\x0a\x00\x14\x40\x03\x04\x0a\x00\x00\x09\x80\x04\x04\x00\x00\x00\x00\xc0\x07\x06\x00\x1e\x0a\x00\x00\x09".force_encoding('ASCII-8BIT') }
+      let(:nlri) { "\x15\xac\x10\x00".force_encoding('ASCII-8BIT') }
+      let(:update_packet) {
+        valid_bgp_marker +
+        packet_length +
+        message_type +
+        withdrawn_routes_length +
+        withdrawn_routes +
+        path_attributes_length +
+        path_attributes +
+        nlri
+      }
+      let(:raw_packet_data) { update_packet }
+
+      context 'with valid parameters' do
+        it 'unpacks all the parameters correctly' do
+          #TODO wait until other classes are built
+          skip
+          #expect(message.message_type).to eq(2)
+          #expect(message.withdrawn_routes).to eq([])
+          #expect(message.path_attributes.length).to eq(5)
+          #expect(message.nlri).to eq("\x15\xac\x10\x00".force_encoding('ASCII-8BIT'))
+        end
+      end
+
+      context 'with bad length' do
       end
     end
 

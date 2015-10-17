@@ -12,7 +12,7 @@ class BGPMessage
   UNPACK_STRING = 'A16S>C'
 
   def message_type
-    MESSAGE_CODE
+    self.class::MESSAGE_CODE
   end
 
   def self.build_from_packet(raw_packet_data)
@@ -55,7 +55,6 @@ class BGPMessageOpen < BGPMessage
   UNPACK_STRING = 'a16S>CCS>S>a4Ca*'
 
   attr_reader :packet_length
-  attr_reader :message_type
   attr_reader :bgp_version
   attr_reader :sender_as
   attr_reader :hold_time
@@ -67,9 +66,7 @@ class BGPMessageOpen < BGPMessage
                  bgp_version, sender_as, hold_time,
                  sender_id, optional_parameters_length,
                  optional_parameters)
-    @marker = marker
     @packet_length = packet_length
-    @message_type = message_type
     @bgp_version = bgp_version
     @sender_as = sender_as
     @hold_time = hold_time
@@ -120,6 +117,65 @@ class BGPMessageOpen < BGPMessage
 
   def raise_error(error)
     raise BGPMessageError.new(error), ERROR_MESSAGES[error]
+  end
+end
+
+class BGPMessageUpdate < BGPMessage
+  ERROR_MESSAGES = {
+  }
+
+  MINIMUM_PACKET_LENGTH = 23
+  MESSAGE_CODE = 2
+  UNPACK_STRING = 'a16S>Ca*'
+
+  attr_reader :packet_length
+  attr_reader :withdrawn_routes
+
+  register_subclass MESSAGE_CODE
+
+  def initialize(marker, packet_length, message_type,
+                 update_data)
+    @packet_length = packet_length
+    @update_data = update_data
+
+    #validate_parameters
+  end
+
+  def withdrawn_routes
+    @withdrawn_routes ||= unpack_withdrawn_routes
+  end
+
+  def unpack_withdrawn_routes
+    @withdrawn_routes_length = @update_data.unpack('S>')[0]
+    packed_withdrawn_routes = @update_data.byteslice(2, @withdrawn_routes_length)
+
+    #TODO this pattern turns up often, make a class
+    #TODO tests for trailing bits
+    #TODO this should be its own class ultimately
+    withdrawn_routes = []
+    offset = 0
+    while offset < @withdrawn_routes_length
+      prefix_length_in_bits = @update_data.byteslice(offset, 1).unpack('C')
+      prefix_length_in_bytes = prefix_length_in_bits / 8
+    end
+  end
+
+  def path_attributes
+    @path_attributes ||= unpack_path_attributes
+  end
+
+  def nlri
+    @nlri ||= unpack_nlri
+  end
+
+  def self.build_from_packet(raw_packet_data)
+    new(*raw_packet_data.unpack(UNPACK_STRING))
+  end
+
+  private
+
+  def validate_parameters
+    #TODO build tests for this
   end
 end
 
