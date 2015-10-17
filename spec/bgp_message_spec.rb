@@ -46,6 +46,15 @@ RSpec.describe BGPMessage do
         it { is_expected.to be_a_kind_of BGPMessageOpen }
 
         #TODO test all the parameters
+        it 'unpacks all the parameters correctly' do
+          expect(message.packet_length).to eq(29)
+          expect(message.message_type).to eq(1)
+          expect(message.bgp_version).to eq(4)
+          expect(message.sender_as).to eq(30)
+          expect(message.hold_time).to eq(180)
+          expect(message.sender_id).to eq([10, 0, 0, 9].pack('CCCC'))
+          expect(message.optional_parameters).to eq([])
+        end
         
         #TODO expect parameters to be returned
       end

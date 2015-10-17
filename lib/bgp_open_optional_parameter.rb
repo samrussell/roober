@@ -1,8 +1,8 @@
 require 'tlv'
 
 class BGPOpenOptionalParameter < TLV
+
   def self.build_from_packet(optional_parameters_block)
-    #3.times.map { BGPOpenOptionalParameter.new(1, 2) }
     #TODO not idiomatic, redo
     parameters = []
     offset = 0

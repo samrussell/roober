@@ -38,13 +38,37 @@ RSpec.describe BGPOpenOptionalParameter do
     let(:raw_packet_data) { optional_parameters_block }
 
     context 'with valid optional parameters' do
-      it 'is an array of BGPOpenOptionalParameter' do
-        expect(BGPOpenOptionalParameter.build_from_packet(optional_parameters_block))
-          .to contain_exactly(
-            a_kind_of(BGPOpenOptionalParameter),
-            a_kind_of(BGPOpenOptionalParameter),
-            a_kind_of(BGPOpenOptionalParameter)
-          )
+      subject(:parameters) { BGPOpenOptionalParameter.build_from_packet(optional_parameters_block) }
+
+      it 'is size 3' do
+        expect(parameters.size).to eq(3)
+      end
+
+      context 'parameter 1' do
+        subject(:parameter1) { parameters[0] }
+
+        it 'is code 2 has data of length 6' do
+          expect(parameter1.code).to eq(2)
+          expect(parameter1.data.length).to eq(6)
+        end
+      end
+
+      context 'parameter 2' do
+        subject(:parameter2) { parameters[1] }
+
+        it 'is code 2 has data of length 2' do
+          expect(parameter2.code).to eq(2)
+          expect(parameter2.data.length).to eq(2)
+        end
+      end
+
+      context 'parameter 3' do
+        subject(:parameter3) { parameters[2] }
+
+        it 'is code 2 has data of length 2' do
+          expect(parameter3.code).to eq(2)
+          expect(parameter3.data.length).to eq(2)
+        end
       end
     end
   end

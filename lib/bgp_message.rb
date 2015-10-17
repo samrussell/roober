@@ -9,8 +9,14 @@ end
 class BGPMessage
   @@subclasses = { }
 
+  UNPACK_STRING = 'A16S>C'
+
+  def message_type
+    MESSAGE_CODE
+  end
+
   def self.build_from_packet(raw_packet_data)
-    marker, length, message_type = raw_packet_data.unpack('A16S>C')
+    marker, length, message_type = raw_packet_data.unpack(UNPACK_STRING)
     check_header_is_valid(raw_packet_data)
     @@subclasses[message_type].build_from_packet(raw_packet_data)
   end
@@ -42,8 +48,20 @@ class BGPMessageOpen < BGPMessage
   }
 
   MINIMUM_PACKET_LENGTH = 29
+  MESSAGE_CODE = 1
+  BGP_VERSION = 4
+  ZERO_HOLD_TIME = 0
+  MINIMUM_HOLD_TIME = 3
+  UNPACK_STRING = 'a16S>CCS>S>a4Ca*'
 
-  register_subclass 1
+  attr_reader :packet_length
+  attr_reader :message_type
+  attr_reader :bgp_version
+  attr_reader :sender_as
+  attr_reader :hold_time
+  attr_reader :sender_id
+
+  register_subclass MESSAGE_CODE
 
   def initialize(marker, packet_length, message_type,
                  bgp_version, sender_as, hold_time,
@@ -57,29 +75,47 @@ class BGPMessageOpen < BGPMessage
     @hold_time = hold_time
     @sender_id = sender_id
     @optional_parameters_length = optional_parameters_length
-    @optional_parameters = optional_parameters
+    @packed_optional_parameters = optional_parameters
 
     validate_parameters
   end
 
+  def optional_parameters
+    @optional_parameters ||= BGPOpenOptionalParameter.build_from_packet(@packed_optional_parameters)
+  end
+
   def self.build_from_packet(raw_packet_data)
-    new(*raw_packet_data.unpack('a16' +
-        'S>' + 'C' + 'C' + 'S>' + 'S>' + 'a4' + 'C' + 'a*')
-       )
+    new(*raw_packet_data.unpack(UNPACK_STRING))
   end
 
   private
 
   def validate_parameters
-    if @packet_length < MINIMUM_PACKET_LENGTH
+    if bad_packet_length?
       raise_error(:bgp_open_bad_length)
-    elsif @optional_parameters_length != @packet_length - MINIMUM_PACKET_LENGTH
+    elsif bad_optional_parameters_length?
       raise_error(:bgp_open_bad_optional_parameters_length)
-    elsif @bgp_version != 4
+    elsif bad_version?
       raise_error(:bgp_open_bad_version)
-    elsif !(@hold_time == 0 || @hold_time >= 3)
+    elsif bad_hold_time?
       raise_error(:bgp_open_bad_hold_time)
     end
+  end
+
+  def bad_packet_length?
+    @packet_length < MINIMUM_PACKET_LENGTH
+  end
+
+  def bad_optional_parameters_length?
+    @optional_parameters_length != @packet_length - MINIMUM_PACKET_LENGTH
+  end
+
+  def bad_version?
+    @bgp_version != BGP_VERSION
+  end
+
+  def bad_hold_time?
+    @hold_time != ZERO_HOLD_TIME && @hold_time < MINIMUM_HOLD_TIME
   end
 
   def raise_error(error)
@@ -88,7 +124,9 @@ class BGPMessageOpen < BGPMessage
 end
 
 class BGPMessageKeepalive < BGPMessage
-  register_subclass 4
+  MESSAGE_CODE = 4
+
+  register_subclass MESSAGE_CODE
 
   def self.build_from_packet(raw_packet_data)
     new

@@ -1,6 +1,7 @@
 class TLV
   CODE_PACKED_LENGTH = 1
   LENGTH_PACKED_LENGTH = 1
+  UNPACK_STRING = 'CCa*'
 
   attr_reader :code
   attr_reader :data
@@ -15,8 +16,8 @@ class TLV
   end
 
   def self.unpack(packed_tlv)
-    tlv_code, tlv_length = packed_tlv.unpack('CC')
-    tlv_data = packed_tlv.byteslice(2, tlv_length)
+    tlv_code, tlv_length, rest_of_message = packed_tlv.unpack(UNPACK_STRING)
+    tlv_data = rest_of_message.byteslice(0, tlv_length)
 
     raise ArgumentError, 'Wrong TLV length' if tlv_length != tlv_data.length
 
