@@ -21,18 +21,37 @@ class Slicer
 
   private
 
-  def next_item
-    return nil if @packed_data.nil? || @packed_data.length == 0
-    data_length = extract_length
-    block_length = data_length + @length_field_length + @prefix_length
-    raise ArgumentError, 'Not enough data to unpack' if data_length > @packed_data.length
-    unpacked_data = @packed_data.byteslice(0, block_length)
-    @packed_data = @packed_data.byteslice(block_length..-1)
-    unpacked_data
+  def no_more_data?
+    @packed_data.nil? || @packed_data.length == 0
   end
 
-  def extract_length
+  def next_item
+    return nil if no_more_data?
+
+    pop_first_n_bytes_of_data(slice_length)
+  end
+
+  def slice_length
+    length_field_value + @length_field_length + @prefix_length
+  end
+
+  def pop_first_n_bytes_of_data(number_of_bytes)
+    first_n_bytes_of_data = @packed_data.byteslice(0, number_of_bytes)
+
+    remove_first_n_bytes_of_data(number_of_bytes)
+
+    first_n_bytes_of_data
+  end
+
+  def remove_first_n_bytes_of_data(number_of_bytes)
+    @packed_data = @packed_data.byteslice(number_of_bytes..-1)
+  end
+
+  def length_field_value
     unpack_string = LENGTH_FIELD_UNPACK_STRING[@length_field_length]
-    @packed_data.byteslice(@prefix_length, @length_field_length).unpack(unpack_string)[0]
+
+    packed_length_field = @packed_data.byteslice(@prefix_length, @length_field_length)
+    
+    packed_length_field.unpack(unpack_string)[0]
   end
 end
