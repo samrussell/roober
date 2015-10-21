@@ -1,3 +1,33 @@
+require './lib/slicer'
+
+class BGPUpdateWithdrawnRoutePacked
+  attr_reader :packed_data
+
+  def initialize(packet)
+    @packed_data = packet.byteslice(0, slice_length(packet))
+  end
+
+  def slice_length(packet)
+    length_offset = 0
+
+    length_size = 1
+
+    prefix_length_in_bits = packet.byteslice(length_offset).unpack('C')[0]
+
+    prefix_length_in_bytes = prefix_length_in_bits / 8
+
+    if prefix_length_in_bits % 8 != 0
+      round_up = 1
+    else
+      round_up = 0
+    end
+
+    prefix_length_in_bytes += round_up
+
+    prefix_length_in_bytes + length_size
+  end
+end
+
 class BGPUpdateWithdrawnRoute
   attr_reader :prefix
   attr_reader :prefix_length
@@ -7,29 +37,20 @@ class BGPUpdateWithdrawnRoute
     @prefix_length = prefix_length
   end
 
-  def self.unpack(packed_routes)
-    routes = []
-    offset = 0
-    #TODO DRY this up, make an unpacker class
-    while offset < packed_routes.length
-      prefix_length_in_bits = packed_routes.getbyte(offset)
-      #TODO yuck!
-      prefix_length_in_bytes = prefix_length_in_bits/8 + handle_remainder(prefix_length_in_bits, 8)
-      prefix = packed_routes.byteslice(offset+1, prefix_length_in_bytes)
-      routes << new(prefix, prefix_length_in_bits)
-      offset += 1 + prefix_length_in_bytes
-    end
 
-    routes
+  def self.unpack(packed_routes)
+    #TODO doesn't work, need to take a block for prefix length
+    packed_route_enumerator = Slicer.new(packed_routes, BGPUpdateWithdrawnRoutePacked)
+
+    packed_route_enumerator.map do |packed_route|
+      new(unpack_prefix(packed_route), packed_route.packed_data.byteslice(0).unpack('C')[0])
+    end
   end
 
   private
 
-  def self.handle_remainder(number, divisor)
-    if number % divisor > 0
-      1
-    else
-      0
-    end
+  def self.unpack_prefix(packed_route)
+    prefix = packed_route.packed_data.byteslice(1..-1).unpack('C*')
+    prefix += (4 - prefix.length).times.map { 0 }
   end
 end

@@ -7,40 +7,40 @@ class Slicer
 
   include Enumerable
 
-  def initialize(packed_data, prefix_length = 0, length_field_length = 1)
+  # need to pass a class
+  # it can take a string of unknown length in its self.build_from_packet
+  # it also needs to respond to packed_data and maybe packed_length
+  def initialize(packed_data, slice_klass)
     @packed_data = packed_data
-    @prefix_length = prefix_length
-    @length_field_length = length_field_length
+    @slice_klass = slice_klass
   end
 
   def each
-    while item = next_item
-      yield item
+    while slice = next_slice
+      truncate_packet
+
+      yield slice
     end
   end
 
   private
 
+  def next_slice
+    return nil if no_more_data?
+
+    @slice = @slice_klass.new(@packed_data)
+  end
+
   def no_more_data?
     @packed_data.nil? || @packed_data.length == 0
   end
 
-  def next_item
-    return nil if no_more_data?
-
-    pop_first_n_bytes_of_data(slice_length)
-  end
-
   def slice_length
-    length_field_value + @length_field_length + @prefix_length
+    @slice.packed_data.length
   end
 
-  def pop_first_n_bytes_of_data(number_of_bytes)
-    first_n_bytes_of_data = @packed_data.byteslice(0, number_of_bytes)
-
-    remove_first_n_bytes_of_data(number_of_bytes)
-
-    first_n_bytes_of_data
+  def truncate_packet
+    remove_first_n_bytes_of_data(slice_length)
   end
 
   def remove_first_n_bytes_of_data(number_of_bytes)
