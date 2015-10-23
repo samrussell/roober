@@ -69,12 +69,8 @@ class SliceIPPrefix
   end
 
   def self.pad_with_zeroes(array, final_length)
-    if array.size >= final_length
-      number_of_zeroes_to_add = 0
-    else
-      number_of_zeroes_to_add = final_length - array.size
-    end
+    array += [0] while array.size < final_length
 
-    array + number_of_zeroes_to_add.times.map { 0 }
+    array
   end
 end
