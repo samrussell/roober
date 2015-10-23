@@ -101,12 +101,13 @@ RSpec.describe BGPMessage do
     end
 
     context 'with an update messge' do
-      let(:packet_length) { [67].pack('S>') }
+      let(:packet_length) { [71].pack('S>') }
       let(:message_type) { [2].pack('C') }
-      let(:withdrawn_routes_length) { [0].pack('S>') }
-      let(:withdrawn_routes) { '' }
+      let(:withdrawn_routes_length) { [4].pack('S>') }
+      let(:withdrawn_routes) { "\x18\x0a\x01\x01" }
+      let(:withdrawn_route1) { BGPUpdateWithdrawnRoute.new([10, 1, 1, 0], 24) }
       let(:path_attributes_length) { [40].pack('S>') }
-      let(:path_attributes) { "\x02\x40\x02\x0a\x02\x01\x00\x1e\x01\x02\x00\x0a\x00\x14\x40\x03\x04\x0a\x00\x00\x09\x80\x04\x04\x00\x00\x00\x00\xc0\x07\x06\x00\x1e\x0a\x00\x00\x09".force_encoding('ASCII-8BIT') }
+      let(:path_attributes) { "\x40\x01\x01\x02\x40\x02\x0a\x02\x01\x00\x1e\x01\x02\x00\x0a\x00\x14\x40\x03\x04\x0a\x00\x00\x09\x80\x04\x04\x00\x00\x00\x00\xc0\x07\x06\x00\x1e\x0a\x00\x00\x09".force_encoding('ASCII-8BIT') }
       let(:nlri) { "\x15\xac\x10\x00".force_encoding('ASCII-8BIT') }
       let(:update_packet) {
         valid_bgp_marker +
@@ -122,11 +123,12 @@ RSpec.describe BGPMessage do
 
       context 'with valid parameters' do
         it 'unpacks all the parameters correctly' do
-          #TODO wait until other classes are built
-          skip
-          #expect(message.message_type).to eq(2)
-          #expect(message.withdrawn_routes).to eq([])
-          #expect(message.path_attributes.length).to eq(5)
+          expect(message.message_type).to eq(2)
+          expect(message.withdrawn_routes[0].prefix).to eq(withdrawn_route1.prefix)
+          expect(message.withdrawn_routes[0].prefix_length).to eq(withdrawn_route1.prefix_length)
+          expect(message.path_attributes.length).to eq(5)
+          #TODO test path attribute fields?
+          expect(message.nlri.length).to eq(1)
           #expect(message.nlri).to eq("\x15\xac\x10\x00".force_encoding('ASCII-8BIT'))
         end
       end

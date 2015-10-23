@@ -127,9 +127,13 @@ class BGPMessageUpdate < BGPMessage
   MINIMUM_PACKET_LENGTH = 23
   MESSAGE_CODE = 2
   UNPACK_STRING = 'a16S>Ca*'
+  WITHDRAWN_ROUTES_LENGTH_UNPACK_STRING = 'S>'
+  WITHDRAWN_ROUTES_LENGTH_FIELD_SIZE = 2
+  PATH_ATTRIBUTES_LENGTH_UNPACK_STRING = 'S>'
+  PATH_ATTRIBUTES_LENGTH_FIELD_SIZE = 2
+
 
   attr_reader :packet_length
-  attr_reader :withdrawn_routes
 
   register_subclass MESSAGE_CODE
 
@@ -146,26 +150,50 @@ class BGPMessageUpdate < BGPMessage
   end
 
   def unpack_withdrawn_routes
-    @withdrawn_routes_length = @update_data.unpack('S>')[0]
-    packed_withdrawn_routes = @update_data.byteslice(2, @withdrawn_routes_length)
+    packed_withdrawn_routes = start_of_packed_withdrawn_routes.byteslice(WITHDRAWN_ROUTES_LENGTH_FIELD_SIZE, withdrawn_routes_length)
 
-    #TODO this pattern turns up often, make a class
-    #TODO tests for trailing bits
-    #TODO this should be its own class ultimately
-    withdrawn_routes = []
-    offset = 0
-    while offset < @withdrawn_routes_length
-      prefix_length_in_bits = @update_data.byteslice(offset, 1).unpack('C')
-      prefix_length_in_bytes = prefix_length_in_bits / 8
-    end
+    unpacked_withdrawn_routes = BGPUpdateWithdrawnRoute.unpack(packed_withdrawn_routes)
+  end
+  
+  def withdrawn_routes_length
+    @withdrawn_routes_length = start_of_packed_withdrawn_routes.unpack(WITHDRAWN_ROUTES_LENGTH_UNPACK_STRING)[0]
+  end
+
+  def start_of_packed_withdrawn_routes
+    @update_data
   end
 
   def path_attributes
     @path_attributes ||= unpack_path_attributes
   end
 
+  def unpack_path_attributes
+    packed_path_attributes = start_of_packed_path_attributes.byteslice(PATH_ATTRIBUTES_LENGTH_FIELD_SIZE, path_attributes_length)
+
+    unpacked_path_attributes = BGPUpdatePathAttribute.unpack(packed_path_attributes)
+  end
+  
+  def path_attributes_length
+    @path_attributes_length = start_of_packed_path_attributes.unpack(PATH_ATTRIBUTES_LENGTH_UNPACK_STRING)[0]
+  end
+
+  def start_of_packed_path_attributes
+    @update_data.byteslice(WITHDRAWN_ROUTES_LENGTH_FIELD_SIZE + withdrawn_routes_length..-1)
+  end
+
   def nlri
     @nlri ||= unpack_nlri
+  end
+
+  #TODO this is repetitive, shrink it down in refactor
+  def unpack_nlri
+    packed_nlri = start_of_packed_nlri
+
+    unpacked_nlri = BGPUpdateNLRI.unpack(packed_nlri)
+  end
+  
+  def start_of_packed_nlri
+    start_of_packed_path_attributes.byteslice(PATH_ATTRIBUTES_LENGTH_FIELD_SIZE + path_attributes_length..-1)
   end
 
   def self.build_from_packet(raw_packet_data)

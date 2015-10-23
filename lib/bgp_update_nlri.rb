@@ -1,6 +1,7 @@
 require './lib/slicer'
 
-class BGPUpdateWithdrawnRoutePacked
+#identical to withdrawn route
+class BGPUpdateNLRIPacked
   OFFSET_OF_LENGTH_FIELD = 0
   SIZE_OF_LENGTH_FIELD = 1
   LENGTH_FIELD_UNPACK_STRING = 'C'
@@ -36,7 +37,7 @@ class BGPUpdateWithdrawnRoutePacked
   end
 end
 
-class BGPUpdateWithdrawnRoute
+class BGPUpdateNLRI
   attr_reader :prefix
   attr_reader :prefix_length
 
@@ -47,7 +48,7 @@ class BGPUpdateWithdrawnRoute
 
 
   def self.unpack(packed_routes)
-    packed_route_enumerator = Slicer.new(packed_routes, BGPUpdateWithdrawnRoutePacked)
+    packed_route_enumerator = Slicer.new(packed_routes, BGPUpdateNLRIPacked)
 
     packed_route_enumerator.map do |packed_route|
       new(unpack_prefix(packed_route), unpack_prefix_length(packed_route))
@@ -55,8 +56,6 @@ class BGPUpdateWithdrawnRoute
   end
 
   private
-
-  
 
   def self.unpack_prefix_length(packed_route)
     packed_route.packed_data.byteslice(0).unpack('C')[0]

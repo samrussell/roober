@@ -31,7 +31,7 @@ RSpec.describe BGPUpdateWithdrawnRoute do
 
     context 'with valid input' do
       it 'unpacks everything correctly' do
-        #expect(unpacked_routes.size).to eq(3)
+        expect(unpacked_routes.size).to eq(3)
         expect(unpacked_routes[0].prefix_length).to eq(route1_prefix_length)
         expect(unpacked_routes[0].prefix).to eq(route1_prefix_unpacked)
         expect(unpacked_routes[1].prefix_length).to eq(route2_prefix_length)
