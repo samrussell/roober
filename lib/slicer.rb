@@ -1,10 +1,4 @@
 class Slicer
-  LENGTH_FIELD_UNPACK_STRING = {
-    1 => 'C',
-    2 => 'S>',
-    4 => 'L>'
-  }
-
   include Enumerable
 
   # need to pass a class
@@ -45,13 +39,5 @@ class Slicer
 
   def remove_first_n_bytes_of_data(number_of_bytes)
     @packed_data = @packed_data.byteslice(number_of_bytes..-1)
-  end
-
-  def length_field_value
-    unpack_string = LENGTH_FIELD_UNPACK_STRING[@length_field_length]
-
-    packed_length_field = @packed_data.byteslice(@prefix_length, @length_field_length)
-    
-    packed_length_field.unpack(unpack_string)[0]
   end
 end
