@@ -152,7 +152,7 @@ class BGPMessageUpdate < BGPMessage
   def unpack_withdrawn_routes
     packed_withdrawn_routes = start_of_packed_withdrawn_routes.byteslice(WITHDRAWN_ROUTES_LENGTH_FIELD_SIZE, withdrawn_routes_length)
 
-    unpacked_withdrawn_routes = BGPUpdateWithdrawnRoute.unpack(packed_withdrawn_routes)
+    unpacked_withdrawn_routes = SliceIPPrefix.unpack(packed_withdrawn_routes)
   end
   
   def withdrawn_routes_length
@@ -189,7 +189,7 @@ class BGPMessageUpdate < BGPMessage
   def unpack_nlri
     packed_nlri = start_of_packed_nlri
 
-    unpacked_nlri = BGPUpdateNLRI.unpack(packed_nlri)
+    unpacked_nlri = SliceIPPrefix.unpack(packed_nlri)
   end
   
   def start_of_packed_nlri

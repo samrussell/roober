@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'bgp_update_withdrawn_route'
+require 'slice_ip_prefix'
 
-RSpec.describe BGPUpdateWithdrawnRoute do
+RSpec.describe SliceIPPrefix do
   describe '.unpack' do
     let(:route1_prefix_length) { 24 }
     let(:route1_prefix) { [10, 1, 1] }
@@ -27,7 +27,7 @@ RSpec.describe BGPUpdateWithdrawnRoute do
     let(:packed_routes) do
       route1_packed + route2_packed + route3_packed
     end
-    subject(:unpacked_routes) { BGPUpdateWithdrawnRoute.unpack(packed_routes) }
+    subject(:unpacked_routes) { SliceIPPrefix.unpack(packed_routes) }
 
     context 'with valid input' do
       it 'unpacks everything correctly' do

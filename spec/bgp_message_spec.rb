@@ -105,7 +105,7 @@ RSpec.describe BGPMessage do
       let(:message_type) { [2].pack('C') }
       let(:withdrawn_routes_length) { [4].pack('S>') }
       let(:withdrawn_routes) { "\x18\x0a\x01\x01" }
-      let(:withdrawn_route1) { BGPUpdateWithdrawnRoute.new([10, 1, 1, 0], 24) }
+      let(:withdrawn_route1) { SliceIPPrefix.new([10, 1, 1, 0], 24) }
       let(:path_attributes_length) { [40].pack('S>') }
       let(:path_attributes) { "\x40\x01\x01\x02\x40\x02\x0a\x02\x01\x00\x1e\x01\x02\x00\x0a\x00\x14\x40\x03\x04\x0a\x00\x00\x09\x80\x04\x04\x00\x00\x00\x00\xc0\x07\x06\x00\x1e\x0a\x00\x00\x09".force_encoding('ASCII-8BIT') }
       let(:nlri) { "\x15\xac\x10\x00".force_encoding('ASCII-8BIT') }
