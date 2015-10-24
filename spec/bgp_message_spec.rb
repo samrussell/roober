@@ -1,5 +1,25 @@
 require 'spec_helper'
 require 'bgp_message'
+require 'stringio'
+require 'slicer'
+
+RSpec.describe BGPMessagePacked do
+  let(:first16bytes) { 16.times.map {0xFF.chr}.join }
+  let(:message1_length) { 20 }
+  let(:message1) { first16bytes + [message1_length].pack("S>") + 2.times.map { 69.chr }.join }
+  let(:message2_length) { 30 }
+  let(:message2) { first16bytes + [message2_length].pack("S>") + 12.times.map { 69.chr }.join }
+  let(:message3_length) { 100 }
+  let(:message3) { first16bytes + [message3_length].pack("S>") + 82.times.map { 69.chr }.join }
+  let(:serialised_messages) { message1 + message2 + message3 }
+  let(:serialised_message_stream) { StringIO.new(serialised_messages) }
+
+  it 'breaks up messages correctly' do
+    expect(BGPMessagePacked.new(serialised_message_stream).packed_data).to eq(message1)
+    expect(BGPMessagePacked.new(serialised_message_stream).packed_data).to eq(message2)
+    expect(BGPMessagePacked.new(serialised_message_stream).packed_data).to eq(message3)
+  end
+end
 
 RSpec.describe BGPMessage do
   describe '.build_from_packet' do

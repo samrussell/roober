@@ -14,7 +14,7 @@ class BGPMessagePacked
   end
 
   def slice_length
-    @packed_data.byteslice(OFFSET_OF_LENGTH_FIELD).unpack(LENGTH_FIELD_UNPACK_STRING).first
+    @packed_data.byteslice(OFFSET_OF_LENGTH_FIELD, SIZE_OF_LENGTH_FIELD).unpack(LENGTH_FIELD_UNPACK_STRING).first
   end
 
   private
