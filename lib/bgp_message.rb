@@ -1,3 +1,43 @@
+class BGPMessagePacked
+  OFFSET_OF_LENGTH_FIELD = 16
+  SIZE_OF_LENGTH_FIELD = 2
+  LENGTH_FIELD_UNPACK_STRING = 'S>'
+
+  attr_reader :packed_data
+
+  def initialize(input_stream)
+    @input_stream = input_stream
+
+    load_up_to_length_field
+
+    load_rest_of_message
+  end
+
+  def slice_length
+    @packed_data.byteslice(OFFSET_OF_LENGTH_FIELD).unpack(LENGTH_FIELD_UNPACK_STRING).first
+  end
+
+  private
+
+
+  def load_up_to_length_field
+    @packed_data = @input_stream.read(header_size)
+  end
+
+  def load_rest_of_message
+    @packed_data << @input_stream.read(rest_of_message_size)
+  end
+
+  def header_size
+    OFFSET_OF_LENGTH_FIELD + SIZE_OF_LENGTH_FIELD
+  end
+
+  def rest_of_message_size
+    slice_length - header_size
+  end
+
+end
+
 class BGPMessageError < StandardError
   attr_reader :suberror
 
