@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'slice_ip_prefix'
+require 'stringio'
 
 RSpec.describe SliceIPPrefix do
   describe '.unpack' do
@@ -27,7 +28,7 @@ RSpec.describe SliceIPPrefix do
     let(:packed_routes) do
       route1_packed + route2_packed + route3_packed
     end
-    subject(:unpacked_routes) { SliceIPPrefix.unpack(packed_routes) }
+    subject(:unpacked_routes) { SliceIPPrefix.unpack(packed_routes, packed_routes.length) }
 
     context 'with valid input' do
       it 'unpacks everything correctly' do

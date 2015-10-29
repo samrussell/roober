@@ -7,33 +7,28 @@ class BGPMessagePacked
 
   def initialize(input_stream)
     @input_stream = input_stream
-
-    load_up_to_length_field
-
-    load_rest_of_message
   end
 
-  def slice_length
-    @packed_data.byteslice(OFFSET_OF_LENGTH_FIELD, SIZE_OF_LENGTH_FIELD).unpack(LENGTH_FIELD_UNPACK_STRING).first
+  def call
+    read_header
+
+    read_body
+
+    @header + @body
   end
 
   private
 
-
-  def load_up_to_length_field
-    @packed_data = @input_stream.read(header_size)
+  def read_header
+    @header = @input_stream.read(OFFSET_OF_LENGTH_FIELD + SIZE_OF_LENGTH_FIELD)
   end
 
-  def load_rest_of_message
-    @packed_data << @input_stream.read(rest_of_message_size)
+  def read_body
+    @body = @input_stream.read(body_length)
   end
 
-  def header_size
-    OFFSET_OF_LENGTH_FIELD + SIZE_OF_LENGTH_FIELD
-  end
-
-  def rest_of_message_size
-    slice_length - header_size
+  def body_length
+    @header.byteslice(OFFSET_OF_LENGTH_FIELD, SIZE_OF_LENGTH_FIELD).unpack(LENGTH_FIELD_UNPACK_STRING).first - @header.length
   end
 
 end
@@ -192,7 +187,7 @@ class BGPMessageUpdate < BGPMessage
   def unpack_withdrawn_routes
     packed_withdrawn_routes = start_of_packed_withdrawn_routes.byteslice(WITHDRAWN_ROUTES_LENGTH_FIELD_SIZE, withdrawn_routes_length)
 
-    unpacked_withdrawn_routes = SliceIPPrefix.unpack(packed_withdrawn_routes)
+    unpacked_withdrawn_routes = SliceIPPrefix.unpack(packed_withdrawn_routes, withdrawn_routes_length)
   end
   
   def withdrawn_routes_length
@@ -229,7 +224,7 @@ class BGPMessageUpdate < BGPMessage
   def unpack_nlri
     packed_nlri = start_of_packed_nlri
 
-    unpacked_nlri = SliceIPPrefix.unpack(packed_nlri)
+    unpacked_nlri = SliceIPPrefix.unpack(packed_nlri, packed_nlri.length)
   end
   
   def start_of_packed_nlri

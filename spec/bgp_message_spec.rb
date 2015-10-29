@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'bgp_message'
 require 'stringio'
-require 'slicer'
+require 'string_slicer'
 
 RSpec.describe BGPMessagePacked do
   let(:first16bytes) { 16.times.map {0xFF.chr}.join }
@@ -15,9 +15,9 @@ RSpec.describe BGPMessagePacked do
   let(:serialised_message_stream) { StringIO.new(serialised_messages) }
 
   it 'breaks up messages correctly' do
-    expect(BGPMessagePacked.new(serialised_message_stream).packed_data).to eq(message1)
-    expect(BGPMessagePacked.new(serialised_message_stream).packed_data).to eq(message2)
-    expect(BGPMessagePacked.new(serialised_message_stream).packed_data).to eq(message3)
+    expect(BGPMessagePacked.new(serialised_message_stream).call).to eq(message1)
+    expect(BGPMessagePacked.new(serialised_message_stream).call).to eq(message2)
+    expect(BGPMessagePacked.new(serialised_message_stream).call).to eq(message3)
   end
 end
 

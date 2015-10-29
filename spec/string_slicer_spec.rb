@@ -1,28 +1,34 @@
 require 'spec_helper'
-require 'slicer'
+require 'string_slicer'
 
-class Slice0BytePrefix1ByteLengthField
-  attr_reader :packed_data
+class StringSlice0BytePrefix1ByteLengthField
+  def initialize(input_stream)
+    @input_stream = input_stream
+  end
 
-  def initialize(packet)
-    slice_length = packet.byteslice(0).unpack('C')[0] + 1
+  def call
+    header = @input_stream.read(1)
 
-    @packed_data = packet.byteslice(0, slice_length)
+    body_length = header.unpack('C').first
+
+    body = @input_stream.read(body_length)
+
+    header + body
   end
 end
 
-RSpec.describe Slicer do
+RSpec.describe StringSlicer do
   describe '#to_a' do
     let(:packed_data) { '' }
     let(:prefix_length) { 0 }
     let(:length_field_length) { 1 }
     let(:slice_klass) { nil }
-    let(:slicer) { Slicer.new(packed_data, slice_klass) }
+    let(:slicer) { StringSlicer.new(packed_data, packed_data.length, slice_klass) }
 
     context 'slices 0 byte prefix, 1 byte length' do
       let(:prefix_length) { 0 }
       let(:length_field_length) { 1 }
-      let(:slice_klass) { Slice0BytePrefix1ByteLengthField }
+      let(:slice_klass) { StringSlice0BytePrefix1ByteLengthField }
       let(:packed_data) {
         [5, 1, 2, 3, 4, 5].pack('CCCCCC') +
         [2, 11, 12].pack('CCC') +
@@ -37,7 +43,7 @@ RSpec.describe Slicer do
           [8, 21, 22, 23, 24, 25, 26, 27, 28].pack('CCCCCCCCC')
         ]
       }
-      subject(:array) { slicer.to_a.map { |slice| slice.packed_data } }
+      subject(:array) { slicer.to_a.map { |slice| slice} }
 
       it { is_expected.to eq(unpacked_data) }
     end
