@@ -1,36 +1,18 @@
-class BGPMessagePacked
+class BGPMessagePacked < AbstractSlice
   OFFSET_OF_LENGTH_FIELD = 16
   SIZE_OF_LENGTH_FIELD = 2
+  BODY_LENGTH_DIFFERENCE = -18
   LENGTH_FIELD_UNPACK_STRING = 'S>'
 
-  attr_reader :packed_data
+  protected
 
-  def initialize(input_stream)
-    @input_stream = input_stream
+  def initial_length
+    OFFSET_OF_LENGTH_FIELD + SIZE_OF_LENGTH_FIELD
   end
 
-  def call
-    read_header
-
-    read_body
-
-    @header + @body
+  def remainder_length
+    @initial.byteslice(OFFSET_OF_LENGTH_FIELD, SIZE_OF_LENGTH_FIELD).unpack(LENGTH_FIELD_UNPACK_STRING).first + BODY_LENGTH_DIFFERENCE
   end
-
-  private
-
-  def read_header
-    @header = @input_stream.read(OFFSET_OF_LENGTH_FIELD + SIZE_OF_LENGTH_FIELD)
-  end
-
-  def read_body
-    @body = @input_stream.read(body_length)
-  end
-
-  def body_length
-    @header.byteslice(OFFSET_OF_LENGTH_FIELD, SIZE_OF_LENGTH_FIELD).unpack(LENGTH_FIELD_UNPACK_STRING).first - @header.length
-  end
-
 end
 
 class BGPMessageError < StandardError

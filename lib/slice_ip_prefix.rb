@@ -1,37 +1,23 @@
 require './lib/io_slicer'
 
-class SliceIPPrefixExtractor
+class SliceIPPrefixExtractor < AbstractSlice
   OFFSET_OF_LENGTH_FIELD = 0
   SIZE_OF_LENGTH_FIELD = 1
   LENGTH_FIELD_UNPACK_STRING = 'C'
 
-  def initialize(input_stream)
-    @input_stream = input_stream
+  protected
+
+  def initial_length
+    OFFSET_OF_LENGTH_FIELD + SIZE_OF_LENGTH_FIELD
   end
 
-  def call
-    read_header
-
-    read_body
-
-    @header + @body
-  end
-
-  private
-
-  def read_header
-    @header = @input_stream.read(OFFSET_OF_LENGTH_FIELD + SIZE_OF_LENGTH_FIELD)
-  end
-
-  def read_body
-    @body = @input_stream.read(body_length)
-  end
-
-  def body_length
-    prefix_length_in_bits = @header.byteslice(OFFSET_OF_LENGTH_FIELD, SIZE_OF_LENGTH_FIELD).unpack(LENGTH_FIELD_UNPACK_STRING).first
+  def remainder_length
+    prefix_length_in_bits = @initial.byteslice(OFFSET_OF_LENGTH_FIELD, SIZE_OF_LENGTH_FIELD).unpack(LENGTH_FIELD_UNPACK_STRING).first
 
     prefix_length_in_bytes = prefix_length_bits_to_bytes(prefix_length_in_bits)
   end
+
+  private
 
   def prefix_length_bits_to_bytes(prefix_length_in_bits)
     prefix_length_in_bytes = prefix_length_in_bits / 8
