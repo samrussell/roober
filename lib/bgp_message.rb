@@ -1,3 +1,8 @@
+require './lib/abstract_slice'
+require './lib/bgp_open_optional_parameter'
+require './lib/bgp_update_path_attribute'
+require './lib/slice_ip_prefix'
+
 class BGPMessagePacked < AbstractSlice
   OFFSET_OF_LENGTH_FIELD = 16
   SIZE_OF_LENGTH_FIELD = 2
@@ -148,7 +153,6 @@ class BGPMessageUpdate < BGPMessage
   WITHDRAWN_ROUTES_LENGTH_FIELD_SIZE = 2
   PATH_ATTRIBUTES_LENGTH_UNPACK_STRING = 'S>'
   PATH_ATTRIBUTES_LENGTH_FIELD_SIZE = 2
-
 
   attr_reader :packet_length
 
