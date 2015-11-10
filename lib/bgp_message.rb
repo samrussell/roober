@@ -62,6 +62,11 @@ class BGPMessage
 end
 
 class BGPMessageOpen < BGPMessage
+  class UnpackedData < Struct.new(:marker, :packet_length, :message_type,
+    :bgp_version, :sender_as, :hold_time, :sender_id, :optional_parameters_length,
+    :optional_parameters)
+  end
+
   ERROR_MESSAGES = {
     bgp_open_bad_length: 'packet length is too short',
     bgp_open_bad_optional_parameters_length: 'optional parameters length is off',
@@ -76,7 +81,6 @@ class BGPMessageOpen < BGPMessage
   MINIMUM_HOLD_TIME = 3
   UNPACK_STRING = 'a16S>CCS>S>a4Ca*'
 
-  attr_reader :packet_length
   attr_reader :bgp_version
   attr_reader :sender_as
   attr_reader :hold_time
@@ -84,19 +88,19 @@ class BGPMessageOpen < BGPMessage
 
   register_subclass MESSAGE_CODE
 
-  def initialize(marker, packet_length, message_type,
-                 bgp_version, sender_as, hold_time,
-                 sender_id, optional_parameters_length,
-                 optional_parameters)
-    @packet_length = packet_length
+  def initialize(bgp_version, sender_as, hold_time,
+                 sender_id, optional_parameters)
     @bgp_version = bgp_version
     @sender_as = sender_as
     @hold_time = hold_time
     @sender_id = sender_id
-    @optional_parameters_length = optional_parameters_length
     @packed_optional_parameters = optional_parameters
+  end
 
-    validate_parameters
+  def packet_length
+    MINIMUM_PACKET_LENGTH + optional_parameters.reduce(0) do |sum, optional_parameter|
+      sum + optional_parameter.size
+    end
   end
 
   def optional_parameters
@@ -104,40 +108,41 @@ class BGPMessageOpen < BGPMessage
   end
 
   def self.build_from_packet(raw_packet_data)
-    new(*raw_packet_data.unpack(UNPACK_STRING))
+    unpacked_data = UnpackedData.new(*raw_packet_data.unpack(UNPACK_STRING))
+
+    if bad_packet_length?(unpacked_data.packet_length)
+      raise_error(:bgp_open_bad_length)
+    elsif bad_optional_parameters_length?(unpacked_data.packet_length, unpacked_data.optional_parameters_length)
+      raise_error(:bgp_open_bad_optional_parameters_length)
+    elsif bad_version?(unpacked_data.bgp_version)
+      raise_error(:bgp_open_bad_version)
+    elsif bad_hold_time?(unpacked_data.hold_time)
+      raise_error(:bgp_open_bad_hold_time)
+    end
+
+    new(unpacked_data.bgp_version, unpacked_data.sender_as, unpacked_data.hold_time,
+      unpacked_data.sender_id, unpacked_data.optional_parameters)
   end
 
   private
 
-  def validate_parameters
-    if bad_packet_length?
-      raise_error(:bgp_open_bad_length)
-    elsif bad_optional_parameters_length?
-      raise_error(:bgp_open_bad_optional_parameters_length)
-    elsif bad_version?
-      raise_error(:bgp_open_bad_version)
-    elsif bad_hold_time?
-      raise_error(:bgp_open_bad_hold_time)
-    end
+  def self.bad_packet_length?(packet_length)
+    packet_length < MINIMUM_PACKET_LENGTH
   end
 
-  def bad_packet_length?
-    @packet_length < MINIMUM_PACKET_LENGTH
+  def self.bad_optional_parameters_length?(packet_length, optional_parameters_length)
+    optional_parameters_length != packet_length - MINIMUM_PACKET_LENGTH
   end
 
-  def bad_optional_parameters_length?
-    @optional_parameters_length != @packet_length - MINIMUM_PACKET_LENGTH
+  def self.bad_version?(bgp_version)
+    bgp_version != BGP_VERSION
   end
 
-  def bad_version?
-    @bgp_version != BGP_VERSION
+  def self.bad_hold_time?(hold_time)
+    hold_time != ZERO_HOLD_TIME && hold_time < MINIMUM_HOLD_TIME
   end
 
-  def bad_hold_time?
-    @hold_time != ZERO_HOLD_TIME && @hold_time < MINIMUM_HOLD_TIME
-  end
-
-  def raise_error(error)
+  def self.raise_error(error)
     raise BGPMessageError.new(error), ERROR_MESSAGES[error]
   end
 end

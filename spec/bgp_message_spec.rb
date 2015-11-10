@@ -108,6 +108,7 @@ RSpec.describe BGPMessage do
         end
       end
 
+      # TODO handle optional parameters in their own tests
       context 'with bad optional parameters length' do
         let(:optional_parameters_length) { [3].pack('C') }
         let(:raw_packet_data) { open_packet }
