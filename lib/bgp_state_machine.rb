@@ -16,7 +16,8 @@ class BGPStateMachine
 
   def message(bgp_message)
     if @state == :active && bgp_message.message_type == BGPMessageOpen::MESSAGE_CODE
-      #@mailbox.send(BGPMessageOpen.new)
+      @mailbox.send_message(BGPMessageOpen.new(4, 1234, 0, 0x0a000, []))
+      @mailbox.send_message(BGPMessageKeepalive.new)
       #@mailbox.send(BGPMessageKeepalive.new)
       @state = :open_confirm
     end

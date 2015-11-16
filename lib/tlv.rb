@@ -11,6 +11,10 @@ class TLV
     @data = data
   end
 
+  def pack
+    [code, @data.length, data].pack(UNPACK_STRING)
+  end
+
   def packed_length
     CODE_PACKED_LENGTH + LENGTH_PACKED_LENGTH + @data.length
   end

@@ -22,6 +22,10 @@ RSpec.describe TLV do
       expect(tlv.data).to eq(tlv_data)
     end
 
+    it 'packs to the original' do
+      expect(tlv.pack).to eq(packed_tlv)
+    end
+
     context 'with bad length' do
       let(:tlv_length) { 21 }
 

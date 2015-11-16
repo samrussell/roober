@@ -72,6 +72,10 @@ RSpec.describe BGPMessage do
           expect(message.sender_id).to eq([10, 0, 0, 9].pack('CCCC'))
           expect(message.optional_parameters).to eq([])
         end
+
+        it 'packs to the original' do
+          expect(message.pack).to eq(raw_packet_data)
+        end
       end
 
       context 'with bad length' do

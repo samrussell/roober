@@ -43,6 +43,10 @@ class BGPMessage
     @@subclasses[message_type].build_from_packet(raw_packet_data)
   end
 
+  def pack
+    raise MethodNotImplementedError
+  end
+
   private
 
   def self.check_header_is_valid(raw_packet_data)
@@ -85,6 +89,7 @@ class BGPMessageOpen < BGPMessage
   attr_reader :sender_as
   attr_reader :hold_time
   attr_reader :sender_id
+  attr_reader :optional_parameters
 
   register_subclass MESSAGE_CODE
 
@@ -94,17 +99,37 @@ class BGPMessageOpen < BGPMessage
     @sender_as = sender_as
     @hold_time = hold_time
     @sender_id = sender_id
-    @packed_optional_parameters = optional_parameters
+    @optional_parameters = optional_parameters
   end
 
   def packet_length
-    MINIMUM_PACKET_LENGTH + optional_parameters.reduce(0) do |sum, optional_parameter|
+    MINIMUM_PACKET_LENGTH + @optional_parameters.reduce(0) do |sum, optional_parameter|
       sum + optional_parameter.size
     end
   end
 
-  def optional_parameters
-    @optional_parameters ||= BGPOpenOptionalParameter.build_from_packet(@packed_optional_parameters)
+  #class UnpackedData < Struct.new(:marker, :packet_length, :message_type,
+  #  :bgp_version, :sender_as, :hold_time, :sender_id, :optional_parameters_length,
+  #  :optional_parameters)
+  #end
+  
+  def pack
+    marker = 16.times.map {0xFF.chr}.join
+    # get packet_length at end
+    # message_type is function
+    # bgp_version has attr_reader
+    # sender_as has attr_reader
+    # hold_time has attr_reader
+    # sender_id has attr_reader
+    # optional_parameters needs packing
+    packed_optional_parameters = optional_parameters.map do |optional_parameter|
+      optional_parameter.pack
+    end.join
+    optional_parameters_length = packed_optional_parameters.length
+
+    #UNPACK_STRING = 'a16S>CCS>S>a4Ca*'
+    [marker, packet_length, message_type, bgp_version, sender_as, hold_time,
+      sender_id, optional_parameters_length, packed_optional_parameters].pack(UNPACK_STRING)
   end
 
   def self.build_from_packet(raw_packet_data)
@@ -121,7 +146,11 @@ class BGPMessageOpen < BGPMessage
     end
 
     new(unpacked_data.bgp_version, unpacked_data.sender_as, unpacked_data.hold_time,
-      unpacked_data.sender_id, unpacked_data.optional_parameters)
+      unpacked_data.sender_id, unpack_optional_parameters(unpacked_data.optional_parameters))
+  end
+
+  def self.unpack_optional_parameters(packed_optional_parameters)
+    BGPOpenOptionalParameter.build_from_packet(packed_optional_parameters)
   end
 
   private
