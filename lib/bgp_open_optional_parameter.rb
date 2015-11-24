@@ -1,4 +1,4 @@
-require 'tlv'
+require './lib/tlv'
 
 class BGPOpenOptionalParameter < TLV
 
