@@ -255,6 +255,10 @@ class BGPMessageUpdate < BGPMessage
     new(*raw_packet_data.unpack(UNPACK_STRING))
   end
 
+  def to_s
+    "New prefixes: #{nlri.inspect}"
+  end
+
   private
 
   def validate_parameters
