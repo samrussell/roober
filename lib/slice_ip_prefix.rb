@@ -44,7 +44,7 @@ class SliceIPPrefix
   end
 
   def to_s
-    @prefix.join('.') + '/' + @prefix_length
+    @prefix.join('.') + '/' + @prefix_length.to_s
   end
 
   def self.unpack(packed_routes, packed_routes_length)
