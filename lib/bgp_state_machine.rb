@@ -54,6 +54,6 @@ class BGPStateMachine
 
   def handle_established_message(bgp_message)
     puts "Message received"
-    puts bgp_message.inspect
+    puts bgp_message.to_s
   end
 end
