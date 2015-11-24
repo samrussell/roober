@@ -43,6 +43,9 @@ class SliceIPPrefix
     @prefix_length = prefix_length
   end
 
+  def to_s
+    @prefix.join('.') + '/' + @prefix_length
+  end
 
   def self.unpack(packed_routes, packed_routes_length)
     packed_route_enumerator = StringSlicer.new(packed_routes, packed_routes_length, SliceIPPrefixExtractor)
