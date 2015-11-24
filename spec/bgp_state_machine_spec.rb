@@ -12,13 +12,6 @@ describe BGPStateMachine do
   end
 
   context 'when in the idle state' do
-    context 'when it receives a ManualStart event' do
-      # handle in next story
-      xit 'transitions to the connect state' do
-        expect { bgp_state_machine.event(:manual_start) }.to change { bgp_state_machine.state }.from(:idle).to(:connect)
-      end
-    end
-
     context 'when it receives a ManualStartPassive event' do
       context 'passive' do
         it 'transitions to the active state' do
@@ -49,7 +42,6 @@ describe BGPStateMachine do
       end
 
       it 'sends an open message, a keepalive message, and changes state to OpenConfirm' do
-        # TODO send messages
         expect(bgp_state_machine.state).to eq(:active)
         
         expect(mailbox).to receive(:send_message).with a_kind_of(BGPMessageOpen)
@@ -59,33 +51,6 @@ describe BGPStateMachine do
 
         expect(bgp_state_machine.state).to eq(:open_confirm)
       end
-    end
-  end
-
-  context 'when in the Connect state' do
-    # handle in next story
-    before do
-      bgp_state_machine.event(:manual_start)
-    end
-
-    xcontext 'when it receives a TcpConnectionConfirmed event' do
-      it 'sends a BGP Open message to the peer' do
-      end
-
-      it 'transitions to the OpenSent state' do
-        expect { bgp_state_machine.event(:tcp_connection_confirmed) }.to change { bgp_state_machine.state }.from(:connect).to(:open_sent)
-      end
-    end
-  end
-
-  # handle in next story
-  xcontext 'when in the opensent state' do
-    context 'when it receives a valid Open message' do
-      it 'transitions to the Active state'
-    end
-
-    context 'when it receives an invalid Open message' do
-      it 'sends a notification message and closes the connection'
     end
   end
 end
