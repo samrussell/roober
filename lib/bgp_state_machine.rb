@@ -39,7 +39,7 @@ class BGPStateMachine
   end
 
   def reply_to_open_message(bgp_open_message)
-    @mailbox.send_message(BGPMessageOpen.new(4, 65002, 0, 0x0a002, []))
+    @mailbox.send_message(BGPMessageOpen.new(4, 65002, 0, [10, 0, 0, 2].pack('c4'), []))
   end
 
   def send_keepalive_message

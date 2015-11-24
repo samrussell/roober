@@ -13,6 +13,7 @@ loop do
   puts "got connection"
   mailbox = Mailbox.new(client)
   bgp_state_machine = BGPStateMachine.new(mailbox)
+  bgp_state_machine.event(:manual_start_passive)
   bgp_message_slicer = IOSlicer.new(client, 10000000000, BGPMessagePacked)
 
   bgp_message_slicer.each do |packed_bgp_message|

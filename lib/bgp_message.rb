@@ -264,10 +264,18 @@ end
 
 class BGPMessageKeepalive < BGPMessage
   MESSAGE_CODE = 4
+  UNPACK_STRING = 'a16S>C'
 
   register_subclass MESSAGE_CODE
 
   def self.build_from_packet(raw_packet_data)
     new
+  end
+
+  def pack
+    marker = 16.times.map {0xFF.chr}.join
+    #TODO magic number!
+    packet_length = 19
+    [marker, packet_length, message_type].pack(UNPACK_STRING)
   end
 end

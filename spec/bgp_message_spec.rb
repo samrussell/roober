@@ -167,6 +167,10 @@ RSpec.describe BGPMessage do
       let(:raw_packet_data) { valid_keepalive_packet }
       
       it { is_expected.to be_a_kind_of BGPMessageKeepalive }
+
+      it 'packs to the original' do
+        expect(subject.pack).to eq(raw_packet_data)
+      end
     end
   end
 end
