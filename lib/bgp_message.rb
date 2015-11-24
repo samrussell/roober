@@ -256,7 +256,8 @@ class BGPMessageUpdate < BGPMessage
   end
 
   def to_s
-    "New prefixes: #{nlri.inspect}"
+    prefix_list = nlri.map { |prefix| prefix.to_s }.join(', ')
+    "New prefixes: #{prefix_list}"
   end
 
   private
