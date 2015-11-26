@@ -260,6 +260,15 @@ class BGPMessageUpdate < BGPMessage
     "New prefixes: #{prefix_list}"
   end
 
+  def to_json
+    data = {
+      'nlri' => nlri,
+      'withdrawn_routes' => withdrawn_routes
+    }
+
+    JSON.generate(data)
+  end
+
   private
 
   def validate_parameters

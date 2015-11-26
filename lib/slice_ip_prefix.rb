@@ -1,4 +1,6 @@
 require './lib/io_slicer'
+require './lib/string_slicer'
+require './lib/abstract_slice'
 
 class SliceIPPrefixExtractor < AbstractSlice
   OFFSET_OF_LENGTH_FIELD = 0
@@ -45,6 +47,18 @@ class SliceIPPrefix
 
   def to_s
     @prefix.join('.') + '/' + @prefix_length.to_s
+  end
+
+  def ==(other)
+    @prefix == other.prefix && @prefix_length == other.prefix_length
+  end
+
+  def eql?(other)
+    self == other
+  end
+
+  def hash
+    [@prefix, @prefix_length].hash
   end
 
   def self.unpack(packed_routes, packed_routes_length)

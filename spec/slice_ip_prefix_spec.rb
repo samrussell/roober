@@ -43,4 +43,21 @@ RSpec.describe SliceIPPrefix do
     end
     #TODO test invalid input
   end
+
+  describe '#eql?' do
+    let(:prefix1) { SliceIPPrefix.new([10, 1, 1, 0], 24) }
+    let(:prefix2) { SliceIPPrefix.new([10, 1, 1, 0], 24) }
+    let(:prefix3) { SliceIPPrefix.new([10, 1, 1, 0], 26) }
+    let(:prefix4) { SliceIPPrefix.new([10, 1, 2, 0], 24) }
+
+    it 'matches the identical ones' do
+      expect(prefix1).to eq(prefix2)
+    end
+
+    it 'does not match non-identical ones' do
+      expect(prefix1).to_not eq(prefix3)
+      expect(prefix1).to_not eq(prefix4)
+      expect(prefix3).to_not eq(prefix4)
+    end
+  end
 end
