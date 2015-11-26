@@ -169,6 +169,12 @@ RSpec.describe BGPMessage do
           expect(parsed_json['nlri']).to contain_exactly(nlri1.to_s) 
           expect(parsed_json['withdrawn_routes']).to contain_exactly(withdrawn_route1.to_s)
         end
+
+        it 'serialises to a string' do
+          text_update_message = message.to_s
+
+          expect(text_update_message).to eq("Withdrawn prefixes: 10.1.1.0/24\nNew prefixes: 172.16.0.0/21")
+        end
       end
 
       context 'with bad length' do

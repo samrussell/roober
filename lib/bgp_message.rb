@@ -256,8 +256,11 @@ class BGPMessageUpdate < BGPMessage
   end
 
   def to_s
-    prefix_list = nlri.map { |prefix| prefix.to_s }.join(', ')
-    "New prefixes: #{prefix_list}"
+    old_prefix_list = withdrawn_routes.map { |prefix| prefix.to_s }.join(', ')
+    new_prefix_list = nlri.map { |prefix| prefix.to_s }.join(', ')
+
+    "Withdrawn prefixes: #{old_prefix_list}\n" +
+      "New prefixes: #{new_prefix_list}"
   end
 
   def to_json
