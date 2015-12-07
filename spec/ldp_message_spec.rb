@@ -22,7 +22,16 @@ RSpec.describe LDPMessagePacked do
   end
 end
 
+
 RSpec.describe LDPMessage do
   describe '.build_from_packet' do
+    context 'hello message' do
+      let(:packed_message) { "\x01\x00\x00\x14\x00\x00\x00\x17\x04\x00\x00\x04\x00\x5a\xc0\x00\x04\x01\x00\x04\x0a\x09\x09\x01" }
+      subject(:hello_message) { LDPMessage.build_from_packet(packed_message) }
+
+      it 'unpacks the message' do
+        expect(hello_message.message_id).to eq(0x17000000)
+      end
+    end
   end
 end

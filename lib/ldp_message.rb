@@ -28,14 +28,14 @@ end
 class LDPMessage
   @@subclasses = { }
 
-  UNPACK_STRING = 'A16S>C'
+  UNPACK_STRING = 'S>'
 
   def message_type
     self.class::MESSAGE_CODE
   end
 
   def self.build_from_packet(raw_packet_data)
-    marker, length, message_type = raw_packet_data.unpack(UNPACK_STRING)
+    message_type, = raw_packet_data.unpack(UNPACK_STRING)
     check_header_is_valid(raw_packet_data)
     @@subclasses[message_type].build_from_packet(raw_packet_data)
   end
@@ -56,20 +56,31 @@ class LDPMessage
   end
 end
 
-class LDPMessageKeepalive < LDPMessage
-  MESSAGE_CODE = 4
-  UNPACK_STRING = 'a16S>C'
+class LDPMessageHello < LDPMessage
+  class UnpackedData < Struct.new(:message_code, :packet_length, :message_id, :data)
+  end
+
+  MESSAGE_CODE = 0x100
+  UNPACK_STRING = '>S>S>La*'
 
   register_subclass MESSAGE_CODE
 
+  attr_reader :message_id, :data
+
+  def initialize(message_id, data)
+    @message_id = message_id
+    @data = data
+  end
+
   def self.build_from_packet(raw_packet_data)
-    new
+    unpacked_data = UnpackedData.new(*raw_packet_data.unpack(UNPACK_STRING))
+
+    new(unpacked_data.message_id, unpacked_data.data)
   end
 
   def pack
-    marker = 16.times.map {0xFF.chr}.join
-    #TODO magic number!
-    packet_length = 19
-    [marker, packet_length, message_type].pack(UNPACK_STRING)
+    # TODO build
+    raise MethodNotImplementedError
+    #[marker, packet_length, message_type].pack(UNPACK_STRING)
   end
 end
