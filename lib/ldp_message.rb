@@ -47,6 +47,7 @@ class LDPMessage
   private
 
   def self.check_header_is_valid(raw_packet_data)
+    # TODO validate
     #marker, length, message_type = raw_packet_data.unpack('A16S>C')
     #raise ArgumentError, 'Marker is not all 0xFF' unless is_marker_all_0xff?(marker)
   end
