@@ -5,20 +5,33 @@ require 'string_slicer'
 require 'json'
 
 RSpec.describe LDPPDUPacked do
-  let(:first2bytes) { [0x00.chr, 0x01.chr].join }
-  let(:message1_length) { 20 }
-  let(:message1) { first2bytes + [message1_length].pack("S>") + 20.times.map { 69.chr }.join }
-  let(:message2_length) { 30 }
-  let(:message2) { first2bytes + [message2_length].pack("S>") + 30.times.map { 69.chr }.join }
-  let(:message3_length) { 100 }
-  let(:message3) { first2bytes + [message3_length].pack("S>") + 100.times.map { 69.chr }.join }
-  let(:serialised_messages) { message1 + message2 + message3 }
-  let(:serialised_message_stream) { StringIO.new(serialised_messages) }
+  # taken from https://www.cloudshark.org/captures/5250c19ac6f2
+  let(:pdu1) { "\x00\x01\x00\x0e\x0a\x00\x01\x01\x00\x00\x02\x01\x00\x04\x00\x00\x00\x03".force_encoding('ASCII-8BIT')}
+  let(:pdu2) { "\x00\x01\x00\xc8\x0a\x00\x01\x01\x00\x00\x03\x00\x00\x16\x00\x00\x00\x04\x01\x01\x00\x0e\x00\x01\x0a\x00\x00\x01\x0a\x00\x00\x09\x0a\x00\x01\x01\x04\x00\x00\x18\x00\x00\x00\x05\x01\x00\x00\x08\x02\x00\x01\x1e\x0a\x00\x00\x08\x02\x00\x00\x04\x00\x00\x00\x03\x04\x00\x00\x18\x00\x00\x00\x06\x01\x00\x00\x08\x02\x00\x01\x1e\x0a\x00\x00\x0c\x02\x00\x00\x04\x00\x00\x00\x10\x04\x00\x00\x18\x00\x00\x00\x07\x01\x00\x00\x08\x02\x00\x01\x1e\x0a\x00\x02\x00\x02\x00\x00\x04\x00\x00\x00\x11\x04\x00\x00\x18\x00\x00\x00\x08\x01\x00\x00\x08\x02\x00\x01\x1e\x0a\x00\x00\x00\x02\x00\x00\x04\x00\x00\x00\x03\x04\x00\x00\x18\x00\x00\x00\x09\x01\x00\x00\x08\x02\x00\x01\x1e\x0a\x00\x01\x00\x02\x00\x00\x04\x00\x00\x00\x03\x04\x00\x00\x18\x00\x00\x00\x0a\x01\x00\x00\x08\x02\x00\x01\x1e\x0a\x00\x00\x04\x02\x00\x00\x04\x00\x00\x00\x12".force_encoding('ASCII-8BIT') }
+  let(:bytes) { pdu1 + pdu2 }
+  let(:serialised_pdu_stream) { StringIO.new(bytes)}
 
-  it 'breaks up messages correctly' do
-    expect(LDPPDUPacked.new(serialised_message_stream).call).to eq(message1)
-    expect(LDPPDUPacked.new(serialised_message_stream).call).to eq(message2)
-    expect(LDPPDUPacked.new(serialised_message_stream).call).to eq(message3)
+  # TODO these packed classes are getting repetitive, find a better pattern
+
+  it 'breaks up real PDUs' do
+    expect(LDPPDUPacked.new(serialised_pdu_stream).call).to eq(pdu1)
+    expect(LDPPDUPacked.new(serialised_pdu_stream).call).to eq(pdu2)
   end
 end
 
+RSpec.describe LDPPDU do
+  describe '.build_from_packet' do
+    let(:pdu_version) { "\x00\x01".force_encoding('ASCII-8BIT') }
+    let(:message1) { "\x01\x00\x00\x02\xab\xcd".force_encoding('ASCII-8BIT') }
+    let(:message2) { "\x01\x00\x00\x02\xab\xcd".force_encoding('ASCII-8BIT') }
+    let(:message3) { "\x01\x00\x00\x02\xab\xcd".force_encoding('ASCII-8BIT') }
+    let(:pdu_body) { message1 + message2 + message3 }
+    let(:pdu_length) { [pdu_body.length].pack('>S') }
+    let(:packed_pdu) { pdu_version + pdu_length + pdu_body }
+    subject(:pdu) { LDPPDU.build_from_packet(packed_pdu) }
+
+    it 'unpacks the PDU and its contents' do
+      expect(pdu.messages.size).to eq(3)
+    end
+  end
+end

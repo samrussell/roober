@@ -5,7 +5,7 @@ require 'string_slicer'
 require 'json'
 
 RSpec.describe LDPMessagePacked do
-  let(:first2bytes) { [0x00.chr, 0x01.chr].join }
+  let(:first2bytes) { [0x01.chr, 0x00.chr].join }
   let(:message1_length) { 20 }
   let(:message1) { first2bytes + [message1_length].pack("S>") + 20.times.map { 69.chr }.join }
   let(:message2_length) { 30 }
