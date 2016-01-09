@@ -26,11 +26,23 @@ end
 RSpec.describe LDPMessage do
   describe '.build_from_packet' do
     context 'hello message' do
-      let(:packed_message) { "\x01\x00\x00\x14\x00\x00\x00\x17\x04\x00\x00\x04\x00\x5a\xc0\x00\x04\x01\x00\x04\x0a\x09\x09\x01" }
+      let(:packed_message) { "\x01\x00\x00\x14\x00\x00\x00\x17\x04\x00\x00\x04\x00\x5a\xc0\x00\x04\x01\x00\x04\x0a\x09\x09\x01".force_encoding('ASCII-8BIT') }
       subject(:hello_message) { LDPMessage.build_from_packet(packed_message) }
 
       it 'unpacks the message' do
-        expect(hello_message.message_id).to eq(0x17000000)
+        expect(hello_message.message_id).to eq(0x17)
+        expect(hello_message.hold_time).to eq(90)
+        expect(hello_message.targeted?).to be true
+        expect(hello_message.request_targeted?).to be true
+      end
+    end
+
+    context 'initialization message' do
+      let(:packed_message) { "\x02\x00\x00\x16\x00\x00\x00\x01\x05\x00\x00\x0e\x00\x01\x00\xb4\x00\x00\x00\x00\x0a\x00\x01\x01\x00\x00".force_encoding('ASCII-8BIT') }
+      subject(:initialization_message) { LDPMessage.build_from_packet(packed_message) }
+
+      it 'unpacks the message' do
+        expect(initialization_message.message_id).to eq(1)
       end
     end
   end

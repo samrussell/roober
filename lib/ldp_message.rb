@@ -58,11 +58,59 @@ class LDPMessage
 end
 
 class LDPMessageHello < LDPMessage
-  class UnpackedData < Struct.new(:message_code, :packet_length, :message_id, :data)
+  class UnpackedLDPMessageHelloData < Struct.new(:message_code, :packet_length, :message_id, :common_tlv_type, :common_tlv_length, :hold_time, :common_flags, :packed_optional_parameters)
   end
 
   MESSAGE_CODE = 0x100
-  UNPACK_STRING = '>S>S>La*'
+  UNPACK_STRING = 'S>S>L>S>S>S>S>a*'
+
+  register_subclass MESSAGE_CODE
+
+  attr_reader :message_id, :hold_time
+
+  def initialize(message_id, hold_time, targeted, request_targeted, packed_optional_parameters)
+    @message_id = message_id
+    @hold_time = hold_time
+    @targeted = targeted
+    @request_targeted = request_targeted
+    @packed_optional_parameters = packed_optional_parameters
+  end
+
+  def targeted?
+    @targeted
+  end
+
+  def request_targeted?
+    @request_targeted
+  end
+
+  def self.build_from_packet(raw_packet_data)
+    unpacked_data = UnpackedLDPMessageHelloData.new(*raw_packet_data.unpack(UNPACK_STRING))
+
+    # TODO flags needs its own class
+    targeted = (unpacked_data.common_flags ^ 0x8000) != 0
+    request_targeted = (unpacked_data.common_flags ^ 0x4000) != 0
+    new(unpacked_data.message_id,
+        unpacked_data.hold_time,
+        targeted,
+        request_targeted,
+        unpacked_data.packed_optional_parameters
+       )
+  end
+
+  def pack
+    # TODO build
+    raise MethodNotImplementedError
+    #[marker, packet_length, message_type].pack(UNPACK_STRING)
+  end
+end
+
+class LDPMessageInitialization < LDPMessage
+  class UnpackedLDPMessageInitializationData < Struct.new(:message_code, :packet_length, :message_id, :data)
+  end
+
+  MESSAGE_CODE = 0x200
+  UNPACK_STRING = 'S>S>L>a*'
 
   register_subclass MESSAGE_CODE
 
@@ -74,9 +122,11 @@ class LDPMessageHello < LDPMessage
   end
 
   def self.build_from_packet(raw_packet_data)
-    unpacked_data = UnpackedData.new(*raw_packet_data.unpack(UNPACK_STRING))
+    unpacked_data = UnpackedLDPMessageInitializationData.new(*raw_packet_data.unpack(UNPACK_STRING))
 
-    new(unpacked_data.message_id, unpacked_data.data)
+    new(unpacked_data.message_id,
+        unpacked_data.data,
+       )
   end
 
   def pack
