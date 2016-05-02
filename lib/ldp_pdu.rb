@@ -28,7 +28,7 @@ class LDPPDU
 
   def self.build_from_packet(raw_packet_data)
     # TODO really bad
-    new(unpack_messages(raw_packet_data[4..-1]))
+    new(unpack_messages(raw_packet_data[10..-1]))
   end
 
   def self.unpack_messages(packed_messages)

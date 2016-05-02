@@ -4,8 +4,7 @@ require 'socket'
 require 'ipaddr'
 require './lib/io_slicer'
 require './lib/mailbox'
-#require './lib/bgp_state_machine'
-#require './lib/bgp_message'
+require './lib/ldp_pdu'
 
 socket = UDPSocket.new
 ip_mreq = IPAddr.new("224.0.0.2").hton + IPAddr.new("10.10.10.1").hton
