@@ -16,6 +16,8 @@ loop do
   mesg, sender_info = socket.recvfrom(1500)
   sender_ip = sender_info[3]
   puts "received message from #{sender_ip}"
+  pdu = LDPPDU.build_from_packet(mesg)
+  puts pdu.inspect
 
   #mailbox = Mailbox.new(client)
   #bgp_state_machine = BGPStateMachine.new(mailbox)

@@ -35,7 +35,9 @@ class LDPPDU
     packed_message_stream = StringIO.new(packed_messages)
     message_slicer = IOSlicer.new(packed_message_stream, packed_messages.length, LDPMessagePacked)
     message_slicer.map do |packed_ldp_message|
-      LDPMessage.build_from_packet(packed_ldp_message)
+      message = LDPMessage.build_from_packet(packed_ldp_message)
+      puts "Message: #{message.inspect}"
+      message
     end
   end
 end
