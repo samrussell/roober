@@ -77,19 +77,19 @@ class LDPMessageHello < LDPMessage
   end
 
   def targeted?
-    @targeted == 1
+    @targeted
   end
 
   def request_targeted?
-    @request_targeted == 1
+    @request_targeted
   end
 
   def self.build_from_packet(raw_packet_data)
     unpacked_data = UnpackedLDPMessageHelloData.new(*raw_packet_data.unpack(UNPACK_STRING))
 
     # TODO flags needs its own class
-    targeted = (unpacked_data.common_flags ^ 0x8000) != 0
-    request_targeted = (unpacked_data.common_flags ^ 0x4000) != 0
+    targeted = (unpacked_data.common_flags & 0x8000) != 0
+    request_targeted = (unpacked_data.common_flags & 0x4000) != 0
     new(unpacked_data.message_id,
         unpacked_data.hold_time,
         targeted,
