@@ -77,11 +77,11 @@ class LDPMessageHello < LDPMessage
   end
 
   def targeted?
-    @targeted
+    @targeted == 1
   end
 
   def request_targeted?
-    @request_targeted
+    @request_targeted == 1
   end
 
   def self.build_from_packet(raw_packet_data)
