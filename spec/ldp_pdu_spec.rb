@@ -22,12 +22,14 @@ end
 RSpec.describe LDPPDU do
   describe '.build_from_packet' do
     let(:pdu_version) { "\x00\x01".force_encoding('ASCII-8BIT') }
+    let(:lsr_id) { [10, 0, 0, 1].pack("CCCC") }
+    let(:label_space_id) { [0].pack("S>") }
     let(:message1) { "\x01\x00\x00\x02\xab\xcd".force_encoding('ASCII-8BIT') }
     let(:message2) { "\x01\x00\x00\x02\xab\xcd".force_encoding('ASCII-8BIT') }
     let(:message3) { "\x01\x00\x00\x02\xab\xcd".force_encoding('ASCII-8BIT') }
     let(:pdu_body) { message1 + message2 + message3 }
     let(:pdu_length) { [pdu_body.length].pack('>S') }
-    let(:packed_pdu) { pdu_version + pdu_length + pdu_body }
+    let(:packed_pdu) { pdu_version + pdu_length + lsr_id + label_space_id + pdu_body }
     subject(:pdu) { LDPPDU.build_from_packet(packed_pdu) }
 
     it 'unpacks the PDU and its contents' do

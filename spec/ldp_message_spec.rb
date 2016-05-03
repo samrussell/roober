@@ -26,6 +26,15 @@ end
 RSpec.describe LDPMessage do
   describe '.build_from_packet' do
     context 'hello message' do
+      let(:message_type) { [0x100].pack("S>") }
+      let(:message_length) { [20].pack("S>") }
+      let(:message_id) { [0x17].pack("L>") }
+      let(:common_parameters) {
+        [0x400].pack("S>") +
+        [4].pack("S>") +
+        [90].pack("S>") +
+        [0xc0].pack("S>")
+      }
       let(:packed_message) { "\x01\x00\x00\x14\x00\x00\x00\x17\x04\x00\x00\x04\x00\x5a\xc0\x00\x04\x01\x00\x04\x0a\x09\x09\x01".force_encoding('ASCII-8BIT') }
       subject(:hello_message) { LDPMessage.build_from_packet(packed_message) }
 
