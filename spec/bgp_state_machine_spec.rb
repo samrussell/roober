@@ -34,7 +34,7 @@ describe BGPStateMachine do
       end
     end
 
-    context 'when it receivs a valid Open message' do
+    context 'when it receives a valid Open message' do
       let(:mock_bgp_open_message) { instance_double(BGPMessageOpen) }
 
       before do

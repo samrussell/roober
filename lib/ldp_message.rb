@@ -135,3 +135,34 @@ class LDPMessageInitialization < LDPMessage
     #[marker, packet_length, message_type].pack(UNPACK_STRING)
   end
 end
+
+class LDPMessageKeepalive < LDPMessage
+  class UnpackedLDPMessageKeepaliveData < Struct.new(:message_code, :packet_length, :message_id, :data)
+  end
+
+  MESSAGE_CODE = 0x201
+  UNPACK_STRING = 'S>S>L>a*'
+
+  register_subclass MESSAGE_CODE
+
+  attr_reader :message_id, :data
+
+  def initialize(message_id, data)
+    @message_id = message_id
+    @data = data
+  end
+
+  def self.build_from_packet(raw_packet_data)
+    unpacked_data = UnpackedLDPMessageKeepaliveData.new(*raw_packet_data.unpack(UNPACK_STRING))
+
+    new(unpacked_data.message_id,
+        unpacked_data.data,
+       )
+  end
+
+  def pack
+    # TODO build
+    raise MethodNotImplementedError
+    #[marker, packet_length, message_type].pack(UNPACK_STRING)
+  end
+end
