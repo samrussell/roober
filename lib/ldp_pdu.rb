@@ -21,6 +21,7 @@ end
 
 class LDPPDU
   UNPACK_STRING = 'S>S>L>S>a*'
+  PACK_STRING = 'S>S>L>S>'
 
   attr_reader :version, :lsr_id, :label_space_id, :messages
 
@@ -31,8 +32,17 @@ class LDPPDU
     @messages = messages
   end
 
+  def pack
+    data = pack_messages
+    pdu_length = 4 + 2 + data.length
+    [version, pdu_length, lsr_id, label_space_id].pack(PACK_STRING) + data
+  end
+
+  def pack_messages
+    messages.map(&:pack).join
+  end
+
   def self.build_from_packet(raw_packet_data)
-    # TODO really bad
     version, length, lsr_id, label_space_id, data = raw_packet_data.unpack(UNPACK_STRING)
     new(version, lsr_id, label_space_id, unpack_messages(data))
   end
@@ -40,10 +50,6 @@ class LDPPDU
   def self.unpack_messages(packed_messages)
     packed_message_stream = StringIO.new(packed_messages)
     message_slicer = IOSlicer.new(packed_message_stream, packed_messages.length, LDPMessagePacked)
-    message_slicer.map do |packed_ldp_message|
-      message = LDPMessage.build_from_packet(packed_ldp_message)
-      puts "Message: #{message.inspect}"
-      message
-    end
+    message_slicer.map { |packed_ldp_message| LDPMessage.build_from_packet(packed_ldp_message) }
   end
 end

@@ -5,6 +5,32 @@ require 'ipaddr'
 require './lib/io_slicer'
 require './lib/mailbox'
 require './lib/ldp_pdu'
+require './lib/ldp_message'
+
+# ruby multicast code taken from https://github.com/ptrv/ruby-multicast-example
+
+HELLO_SEND_INTERVAL = 5
+HELLO_HOLD_TIME = HELLO_SEND_INTERVAL * 3
+
+Thread.new do
+  MULTICAST_ADDR = "224.0.0.2"
+  PORT= 646
+  SOURCE_ADDR = "10.10.10.1"
+  socket = UDPSocket.open
+
+  begin
+    socket.setsockopt(Socket::IPPROTO_IP, Socket::IP_TTL, [1].pack('i'))
+
+    while true do
+      message = LDPMessageHello.new(1, 5, 0, 0, nil)
+      pdu = LDPPDU.new(1, 0x0a0a0a01, 1, [message])
+      socket.send(pdu.pack, 0, MULTICAST_ADDR, PORT)
+      sleep(HELLO_SEND_INTERVAL)
+    end
+  ensure
+    socket.close
+  end
+end
 
 socket = UDPSocket.new
 ip_mreq = IPAddr.new("224.0.0.2").hton + IPAddr.new("10.10.10.1").hton

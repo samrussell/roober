@@ -58,11 +58,12 @@ class LDPMessage
 end
 
 class LDPMessageHello < LDPMessage
-  class UnpackedLDPMessageHelloData < Struct.new(:message_code, :packet_length, :message_id, :common_tlv_type, :common_tlv_length, :hold_time, :common_flags, :packed_optional_parameters)
+  class UnpackedLDPMessageHelloData < Struct.new(:message_code, :message_length, :message_id, :common_tlv_type, :common_tlv_length, :hold_time, :common_flags, :packed_optional_parameters)
   end
 
   MESSAGE_CODE = 0x100
   UNPACK_STRING = 'S>S>L>S>S>S>S>a*'
+  PACK_STRING = 'S>S>L>S>S>S>S>'
 
   register_subclass MESSAGE_CODE
 
@@ -99,9 +100,22 @@ class LDPMessageHello < LDPMessage
   end
 
   def pack
-    # TODO build
-    raise MethodNotImplementedError
-    #[marker, packet_length, message_type].pack(UNPACK_STRING)
+    common_tlv_type = 0x400
+    common_tlv_length = 4
+    message_length = 4 + (4 + common_tlv_length) + @packed_optional_parameters.length
+    common_flags = 0
+    common_flags += 0x8000 if targeted?
+    common_flags += 0x4000 if request_targeted?
+    [
+      MESSAGE_CODE,
+      message_length,
+      @message_id,
+      common_tlv_type,
+      common_tlv_length,
+      @hold_time,
+      common_flags
+    ].pack(PACK_STRING) +
+      @packed_optional_parameters
   end
 end
 

@@ -23,29 +23,39 @@ RSpec.describe LDPMessagePacked do
 end
 
 
-RSpec.describe LDPMessage do
+RSpec.describe LDPMessageHello do
+  let(:message_type) { [0x100].pack("S>") }
+  let(:message_length) { [20].pack("S>") }
+  let(:message_id) { [0x17].pack("L>") }
+  let(:common_parameters) {
+    [0x400].pack("S>") +
+    [4].pack("S>") +
+    [90].pack("S>") +
+    [0xc0].pack("S>")
+  }
+  let(:packed_message) { "\x01\x00\x00\x14\x00\x00\x00\x17\x04\x00\x00\x04\x00\x5a\xc0\x00\x04\x01\x00\x04\x0a\x09\x09\x01".force_encoding('ASCII-8BIT') }
+  let(:hello_message) { LDPMessage.build_from_packet(packed_message) }
+  let(:repacked_message) { hello_message.pack }
+
   describe '.build_from_packet' do
-    context 'hello message' do
-      let(:message_type) { [0x100].pack("S>") }
-      let(:message_length) { [20].pack("S>") }
-      let(:message_id) { [0x17].pack("L>") }
-      let(:common_parameters) {
-        [0x400].pack("S>") +
-        [4].pack("S>") +
-        [90].pack("S>") +
-        [0xc0].pack("S>")
-      }
-      let(:packed_message) { "\x01\x00\x00\x14\x00\x00\x00\x17\x04\x00\x00\x04\x00\x5a\xc0\x00\x04\x01\x00\x04\x0a\x09\x09\x01".force_encoding('ASCII-8BIT') }
-      subject(:hello_message) { LDPMessage.build_from_packet(packed_message) }
 
-      it 'unpacks the message' do
-        expect(hello_message.message_id).to eq(0x17)
-        expect(hello_message.hold_time).to eq(90)
-        expect(hello_message.targeted?).to be true
-        expect(hello_message.request_targeted?).to be true
-      end
+    it 'unpacks the message' do
+      expect(hello_message.message_id).to eq(0x17)
+      expect(hello_message.hold_time).to eq(90)
+      expect(hello_message.targeted?).to be true
+      expect(hello_message.request_targeted?).to be true
     end
+  end
 
+  describe '#pack' do
+    it 'packs the message' do
+      expect(repacked_message).to eq(packed_message)
+    end
+  end
+end
+
+RSpec.describe LDPMessageInitialization do
+  describe '.build_from_packet' do
     context 'initialization message' do
       let(:packed_message) { "\x02\x00\x00\x16\x00\x00\x00\x01\x05\x00\x00\x0e\x00\x01\x00\xb4\x00\x00\x00\x00\x0a\x00\x01\x01\x00\x00".force_encoding('ASCII-8BIT') }
       subject(:initialization_message) { LDPMessage.build_from_packet(packed_message) }

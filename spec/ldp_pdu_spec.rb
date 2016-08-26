@@ -35,23 +35,30 @@ RSpec.describe LDPPDUPacked do
 end
 
 RSpec.describe LDPPDU do
-  describe '.build_from_packet' do
-    let(:pdu_version) { "\x00\x01".force_encoding('ASCII-8BIT') }
-    let(:lsr_id) { [10, 0, 0, 1].pack("CCCC") }
-    let(:label_space_id) { [0x15].pack("S>") }
-    let(:message1) { "\x01\x00\x00\x02\xab\xcd".force_encoding('ASCII-8BIT') }
-    let(:message2) { "\x01\x00\x00\x02\xab\xcd".force_encoding('ASCII-8BIT') }
-    let(:message3) { "\x01\x00\x00\x02\xab\xcd".force_encoding('ASCII-8BIT') }
-    let(:pdu_body) { message1 + message2 + message3 }
-    let(:pdu_length) { [pdu_body.length].pack('>S') }
-    let(:packed_pdu) { pdu_version + pdu_length + lsr_id + label_space_id + pdu_body }
-    subject(:pdu) { LDPPDU.build_from_packet(packed_pdu) }
+  let(:pdu_version) { "\x00\x01".force_encoding('ASCII-8BIT') }
+  let(:lsr_id) { [10, 0, 0, 1].pack("CCCC") }
+  let(:label_space_id) { [0x15].pack("S>") }
+  let(:message1) { "\x01\x00\x00\x14\x00\x00\x00\x00\x04\x00\x00\x04\x00\x0f\x00\x00\x04\x01\x00\x04\x0a\x00\x01\x01".force_encoding('ASCII-8BIT') }
+  let(:message2) { "\x01\x00\x00\x14\x00\x00\x00\x00\x04\x00\x00\x04\x00\x0f\x00\x00\x04\x01\x00\x04\x0a\x00\x01\x01".force_encoding('ASCII-8BIT') }
+  let(:message3) { "\x01\x00\x00\x14\x00\x00\x00\x00\x04\x00\x00\x04\x00\x0f\x00\x00\x04\x01\x00\x04\x0a\x00\x01\x01".force_encoding('ASCII-8BIT') }
+  let(:pdu_body) { message1 + message2 + message3 }
+  let(:pdu_length) { [pdu_body.length + lsr_id.length + label_space_id.length].pack('S>') }
+  let(:packed_pdu) { pdu_version + pdu_length + lsr_id + label_space_id + pdu_body }
+  let(:pdu) { LDPPDU.build_from_packet(packed_pdu) }
+  let(:repacked_pdu) { pdu.pack }
 
+  describe '.build_from_packet' do
     it 'unpacks the PDU and its contents' do
       expect(pdu.version).to eq(1)
       expect(pdu.lsr_id).to eq(0x0a000001)
       expect(pdu.label_space_id).to eq(0x15)
       expect(pdu.messages.size).to eq(3)
+    end
+  end
+
+  describe '#pack' do
+    it 'packs the PDU and its contents' do
+      expect(repacked_pdu).to eq(packed_pdu)
     end
   end
 end
