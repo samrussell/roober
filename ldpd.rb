@@ -11,6 +11,7 @@ require './lib/ldp_message'
 
 HELLO_SEND_INTERVAL = 5
 HELLO_HOLD_TIME = HELLO_SEND_INTERVAL * 3
+Thread.abort_on_exception = true
 
 Thread.new do
   MULTICAST_ADDR = "224.0.0.2"
@@ -20,9 +21,10 @@ Thread.new do
 
   begin
     socket.setsockopt(Socket::IPPROTO_IP, Socket::IP_TTL, [1].pack('i'))
+    socket.setsockopt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_IF, IPAddr.new(SOURCE_ADDR).hton)
 
-    while true do
-      message = LDPMessageHello.new(1, 5, 0, 0, nil)
+    loop do
+      message = LDPMessageHello.new(1, 5, 0, 0, "")
       pdu = LDPPDU.new(1, 0x0a0a0a01, 1, [message])
       socket.send(pdu.pack, 0, MULTICAST_ADDR, PORT)
       sleep(HELLO_SEND_INTERVAL)
