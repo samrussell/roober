@@ -20,15 +20,21 @@ class LDPPDUPacked < AbstractSlice
 end
 
 class LDPPDU
-  attr_reader :messages
+  UNPACK_STRING = 'S>S>L>S>a*'
 
-  def initialize(messages)
+  attr_reader :version, :lsr_id, :label_space_id, :messages
+
+  def initialize(version, lsr_id, label_space_id, messages)
+    @version = version
+    @lsr_id = lsr_id
+    @label_space_id = label_space_id
     @messages = messages
   end
 
   def self.build_from_packet(raw_packet_data)
     # TODO really bad
-    new(unpack_messages(raw_packet_data[10..-1]))
+    version, length, lsr_id, label_space_id, data = raw_packet_data.unpack(UNPACK_STRING)
+    new(version, lsr_id, label_space_id, unpack_messages(data))
   end
 
   def self.unpack_messages(packed_messages)

@@ -5,9 +5,24 @@ require 'string_slicer'
 require 'json'
 
 RSpec.describe LDPPDUPacked do
-  # taken from https://www.cloudshark.org/captures/5250c19ac6f2
-  let(:pdu1) { "\x00\x01\x00\x0e\x0a\x00\x01\x01\x00\x00\x02\x01\x00\x04\x00\x00\x00\x03".force_encoding('ASCII-8BIT')}
-  let(:pdu2) { "\x00\x01\x00\xc8\x0a\x00\x01\x01\x00\x00\x03\x00\x00\x16\x00\x00\x00\x04\x01\x01\x00\x0e\x00\x01\x0a\x00\x00\x01\x0a\x00\x00\x09\x0a\x00\x01\x01\x04\x00\x00\x18\x00\x00\x00\x05\x01\x00\x00\x08\x02\x00\x01\x1e\x0a\x00\x00\x08\x02\x00\x00\x04\x00\x00\x00\x03\x04\x00\x00\x18\x00\x00\x00\x06\x01\x00\x00\x08\x02\x00\x01\x1e\x0a\x00\x00\x0c\x02\x00\x00\x04\x00\x00\x00\x10\x04\x00\x00\x18\x00\x00\x00\x07\x01\x00\x00\x08\x02\x00\x01\x1e\x0a\x00\x02\x00\x02\x00\x00\x04\x00\x00\x00\x11\x04\x00\x00\x18\x00\x00\x00\x08\x01\x00\x00\x08\x02\x00\x01\x1e\x0a\x00\x00\x00\x02\x00\x00\x04\x00\x00\x00\x03\x04\x00\x00\x18\x00\x00\x00\x09\x01\x00\x00\x08\x02\x00\x01\x1e\x0a\x00\x01\x00\x02\x00\x00\x04\x00\x00\x00\x03\x04\x00\x00\x18\x00\x00\x00\x0a\x01\x00\x00\x08\x02\x00\x01\x1e\x0a\x00\x00\x04\x02\x00\x00\x04\x00\x00\x00\x12".force_encoding('ASCII-8BIT') }
+  let(:pdu1) do
+    version = 1
+    router = 0x12345678
+    label = 0xabcd
+    data = 23.times.map { 0xff }.pack("C*")
+    pdu_length = 4 + 2 + 23 # length of router + label + data
+    [version, pdu_length, router, label].pack("S>S>L>S>") + data
+  end
+
+  let(:pdu2) do
+    version = 3
+    router = 0x23456789
+    label = 0xcdef
+    data = 12.times.map { 0xff }.pack("C*")
+    pdu_length = 4 + 2 + 12 # length of router + label + data
+    [version, pdu_length, router, label].pack("S>S>L>S>") + data
+  end
+
   let(:bytes) { pdu1 + pdu2 }
   let(:serialised_pdu_stream) { StringIO.new(bytes)}
 
@@ -23,7 +38,7 @@ RSpec.describe LDPPDU do
   describe '.build_from_packet' do
     let(:pdu_version) { "\x00\x01".force_encoding('ASCII-8BIT') }
     let(:lsr_id) { [10, 0, 0, 1].pack("CCCC") }
-    let(:label_space_id) { [0].pack("S>") }
+    let(:label_space_id) { [0x15].pack("S>") }
     let(:message1) { "\x01\x00\x00\x02\xab\xcd".force_encoding('ASCII-8BIT') }
     let(:message2) { "\x01\x00\x00\x02\xab\xcd".force_encoding('ASCII-8BIT') }
     let(:message3) { "\x01\x00\x00\x02\xab\xcd".force_encoding('ASCII-8BIT') }
@@ -33,6 +48,9 @@ RSpec.describe LDPPDU do
     subject(:pdu) { LDPPDU.build_from_packet(packed_pdu) }
 
     it 'unpacks the PDU and its contents' do
+      expect(pdu.version).to eq(1)
+      expect(pdu.lsr_id).to eq(0x0a000001)
+      expect(pdu.label_space_id).to eq(0x15)
       expect(pdu.messages.size).to eq(3)
     end
   end
