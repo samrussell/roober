@@ -24,7 +24,7 @@ Thread.new do
     socket.setsockopt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_IF, IPAddr.new(SOURCE_ADDR).hton)
 
     loop do
-      message = LDPMessageHello.new(1, 5, 0, 0, "")
+      message = LDPMessageHello.new(1, 15, false, false, "")
       pdu = LDPPDU.new(1, 0x0a0a0a01, 0, [message])
       socket.send(pdu.pack, 0, MULTICAST_ADDR, PORT)
       sleep(HELLO_SEND_INTERVAL)
