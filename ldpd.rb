@@ -25,7 +25,7 @@ Thread.new do
 
     loop do
       message = LDPMessageHello.new(1, 5, 0, 0, "")
-      pdu = LDPPDU.new(1, 0x0a0a0a01, 1, [message])
+      pdu = LDPPDU.new(1, 0x0a0a0a01, 0, [message])
       socket.send(pdu.pack, 0, MULTICAST_ADDR, PORT)
       sleep(HELLO_SEND_INTERVAL)
     end
