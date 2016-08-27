@@ -1,6 +1,8 @@
 require './lib/abstract_slice'
 require './lib/ldp_message'
 require 'stringio'
+require 'socket'
+require 'ipaddr'
 
 class LDPPDUPacked < AbstractSlice
   OFFSET_OF_LENGTH_FIELD = 2
@@ -27,7 +29,7 @@ class LDPPDU
 
   def initialize(version, lsr_id, label_space_id, messages)
     @version = version
-    @lsr_id = lsr_id
+    @lsr_id = IPAddr.new(lsr_id, Socket::PF_INET)
     @label_space_id = label_space_id
     @messages = messages
   end
@@ -35,7 +37,7 @@ class LDPPDU
   def pack
     data = pack_messages
     pdu_length = 4 + 2 + data.length
-    [version, pdu_length, lsr_id, label_space_id].pack(PACK_STRING) + data
+    [version, pdu_length, lsr_id.to_i, label_space_id].pack(PACK_STRING) + data
   end
 
   def pack_messages
