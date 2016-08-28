@@ -31,9 +31,14 @@ RSpec.describe LDPMessageHello do
     [0x400].pack("S>") +
     [4].pack("S>") +
     [90].pack("S>") +
-    [0xc0].pack("S>")
+    [0xc000].pack("S>")
   }
-  let(:packed_message) { "\x01\x00\x00\x14\x00\x00\x00\x17\x04\x00\x00\x04\x00\x5a\xc0\x00\x04\x01\x00\x04\x0a\x09\x09\x01".force_encoding('ASCII-8BIT') }
+  let(:ipv4_parameter) {
+    [0x401].pack("S>") +
+    [4].pack("S>") +
+    [10, 1, 1, 1].pack("CCCC")
+  }
+  let(:packed_message) { message_type + message_length + message_id + common_parameters + ipv4_parameter }
   let(:hello_message) { LDPMessage.build_from_packet(packed_message) }
   let(:repacked_message) { hello_message.pack }
 
