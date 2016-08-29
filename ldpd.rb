@@ -26,7 +26,7 @@ Thread.new do
 
     loop do
       ip_parameter = LDPParameterIPv4Address.new(IPAddr.new("10.10.10.1").to_i)
-      message = LDPMessageHello.new(1, 15, false, false, ip_parameter)
+      message = LDPMessageHello.new(1, 15, false, false, ip_parameter.pack)
       pdu = LDPPDU.new(1, 0x0a0a0a01, 0, [message])
       socket.send(pdu.pack, 0, MULTICAST_ADDR, PORT)
       sleep(HELLO_SEND_INTERVAL)
