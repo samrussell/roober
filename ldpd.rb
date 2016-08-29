@@ -24,10 +24,13 @@ Thread.new do
     socket.setsockopt(Socket::IPPROTO_IP, Socket::IP_TTL, [1].pack('i'))
     socket.setsockopt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_IF, IPAddr.new(SOURCE_ADDR).hton)
 
+    message_id = 0
+
     loop do
-      ip_parameter = LDPParameterIPv4Address.new(IPAddr.new("10.10.10.1").to_i)
-      message = LDPMessageHello.new(1, 15, false, false, ip_parameter.pack)
-      pdu = LDPPDU.new(1, 0x0a0a0a01, 0, [message])
+      message_id += 1
+      ip_parameter = LDPParameterIPv4Address.new(IPAddr.new("10.1.1.1").to_i)
+      message = LDPMessageHello.new(message_id, 15, false, false, ip_parameter.pack)
+      pdu = LDPPDU.new(1, 0x0a010101, 0, [message])
       socket.send(pdu.pack, 0, MULTICAST_ADDR, PORT)
       sleep(HELLO_SEND_INTERVAL)
     end
