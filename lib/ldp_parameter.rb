@@ -2,7 +2,7 @@ require './lib/abstract_slice'
 require 'socket'
 require 'ipaddr'
 
-class LDPPacked < AbstractSlice
+class LDPParameterPacked < AbstractSlice
   OFFSET_OF_LENGTH_FIELD = 2
   SIZE_OF_LENGTH_FIELD = 2
   BODY_LENGTH_DIFFERENCE = 0

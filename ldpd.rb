@@ -6,6 +6,7 @@ require './lib/io_slicer'
 require './lib/mailbox'
 require './lib/ldp_pdu'
 require './lib/ldp_message'
+require './lib/ldp_parameter'
 
 # ruby multicast code taken from https://github.com/ptrv/ruby-multicast-example
 
@@ -24,7 +25,8 @@ Thread.new do
     socket.setsockopt(Socket::IPPROTO_IP, Socket::IP_MULTICAST_IF, IPAddr.new(SOURCE_ADDR).hton)
 
     loop do
-      message = LDPMessageHello.new(1, 15, false, false, "")
+      ip_parameter = LDPParameterIPv4Address.new(IPAddr.new("10.10.10.1").hton)
+      message = LDPMessageHello.new(1, 15, false, false, ip_parameter)
       pdu = LDPPDU.new(1, 0x0a0a0a01, 0, [message])
       socket.send(pdu.pack, 0, MULTICAST_ADDR, PORT)
       sleep(HELLO_SEND_INTERVAL)
