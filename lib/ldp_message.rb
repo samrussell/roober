@@ -145,7 +145,7 @@ class LDPMessageInitialization < LDPMessage
   end
 
   def pack
-    message_length = 4 + @data.length
+    message_length = 4 + @data.try!(:length).to_i
 
     [
       MESSAGE_CODE,
