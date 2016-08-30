@@ -43,13 +43,21 @@ Thread.new do
   server = TCPServer.new("10.1.1.1", 646)
 
   loop do
-    client = server.aceept
+    client = server.accept
     puts "got connection"
+
+    mailbox = Mailbox.new(client)
+    ldp_state_machine = LDPStateMachine.new(mailbox)
+    ldp_state_machine.event(:tcp_connection_confirmed)
     ldp_pdu_slicer = IOSlicer.new(client, 10000000000, LDPPDUPacked)
 
     ldp_pdu_slicer.each do |packed_ldp_pdu|
       ldp_pdu = LDPPDU.build_from_packet(packed_ldp_pdu)
-      puts ldp_pdu
+      puts ldp_pdu.inspect
+      ldp_pdu.messages.each do |ldp_message|
+        puts ldp_message.inspect
+        ldp_state_machine.message(ldp_message)
+      end
     end
   end
 end
@@ -67,16 +75,4 @@ loop do
   puts "received message from #{sender_ip}"
   pdu = LDPPDU.build_from_packet(mesg)
   puts pdu.inspect
-
-  #mailbox = Mailbox.new(client)
-  #bgp_state_machine = BGPStateMachine.new(mailbox)
-  #bgp_state_machine.event(:manual_start_passive)
-  #bgp_message_slicer = IOSlicer.new(client, 10000000000, BGPMessagePacked)
-
-  #bgp_message_slicer.each do |packed_bgp_message|
-  #  bgp_message = BGPMessage.build_from_packet(packed_bgp_message)
-  #  puts "message class: #{bgp_message.class}"
-  #  puts "Forwarding message type #{bgp_message.message_type}"
-  #  bgp_state_machine.message(bgp_message)
-  #end
 end
