@@ -5,7 +5,7 @@ require './lib/mailbox'
 
 describe LDPStateMachine do
   let(:mock_ldp_keepalive_message) { instance_double(LDPMessageKeepalive, :message_type => LDPMessageKeepalive::MESSAGE_CODE) }
-  let(:mock_ldp_initialise_message) { instance_double(LDPMessageInitialization, :message_type => LDPMessageInitialization::MESSAGE_CODE) }
+  let(:mock_ldp_initialise_message) { instance_double(LDPMessageInitialization, :message_type => LDPMessageInitialization::MESSAGE_CODE, :message_id => 123) }
   let(:mailbox) { instance_double('Mailbox') }
   subject(:ldp_state_machine) { LDPStateMachine.new(mailbox) }
 

@@ -35,11 +35,11 @@ class LDPStateMachine
   end
 
   def reply_to_initialise_message(ldp_initialise_message)
-    @mailbox.send_message(LDPMessageInitialization.new(nil, nil))
+    @mailbox.send_message(LDPMessageInitialization.new(ldp_initialise_message.message_id, ""))
   end
 
   def send_keepalive_message
-    @mailbox.send_message(LDPMessageKeepalive.new(nil, nil))
+    @mailbox.send_message(LDPMessageKeepalive.new(1, ""))
   end
 
   def handle_openrec_message(ldp_message)
