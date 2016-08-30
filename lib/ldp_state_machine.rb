@@ -1,3 +1,5 @@
+require './lib/ldp_pdu'
+
 class LDPStateMachine
   attr_reader :state
 
@@ -26,20 +28,26 @@ class LDPStateMachine
 
   def handle_initialised_message(ldp_message)
     if ldp_message.message_type == LDPMessageInitialization::MESSAGE_CODE
-      reply_to_initialise_message(ldp_message)
+      messages = [
+        generate_reply_to_initialise_message(ldp_message),
+        generate_keepalive_message
+      ]
 
-      send_keepalive_message
+      # TODO don't hardcode ips etc
+      pdu = LDPPDU.new(1, 0x0a010101, 0, messages)
+
+      @mailbox.send_message(pdu)
 
       @state = :openrec
     end
   end
 
-  def reply_to_initialise_message(ldp_initialise_message)
-    @mailbox.send_message(LDPMessageInitialization.new(ldp_initialise_message.message_id, ""))
+  def generate_reply_to_initialise_message(ldp_initialise_message)
+    LDPMessageInitialization.new(ldp_initialise_message.message_id, "")
   end
 
-  def send_keepalive_message
-    @mailbox.send_message(LDPMessageKeepalive.new(1, ""))
+  def generate_keepalive_message
+    LDPMessageKeepalive.new(1, "")
   end
 
   def handle_openrec_message(ldp_message)

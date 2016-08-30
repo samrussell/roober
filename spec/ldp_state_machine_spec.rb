@@ -28,9 +28,14 @@ describe LDPStateMachine do
       end
 
       context 'when it receives an Initialization message' do
-        it 'sends an initialisation message followed by a keepalive message and transitions to the openrec state' do
-          expect(mailbox).to receive(:send_message).ordered.with(a_kind_of(LDPMessageInitialization))
-          expect(mailbox).to receive(:send_message).ordered.with(a_kind_of(LDPMessageKeepalive))
+        it 'sends a pdu with an initialisation message followed by a keepalive message and transitions to the openrec state' do
+          #expect(mailbox).to receive(:send_message).ordered.with(a_kind_of(LDPMessageInitialization))
+          #expect(mailbox).to receive(:send_message).ordered.with(a_kind_of(LDPMessageKeepalive))
+          expect(mailbox).to receive(:send_message) do |pdu|
+            expect(pdu.messages.count).to eq(2)
+            expect(pdu.messages[0]).to be_a_kind_of(LDPMessageInitialization)
+            expect(pdu.messages[1]).to be_a_kind_of(LDPMessageKeepalive)
+          end
           expect(ldp_state_machine.state).to eq(:initialised)
 
           ldp_state_machine.message(mock_ldp_initialise_message)
@@ -42,8 +47,7 @@ describe LDPStateMachine do
 
     context 'when in the Openrec state' do
       before do
-        allow(mailbox).to receive(:send_message).ordered.with(a_kind_of(LDPMessageInitialization))
-        allow(mailbox).to receive(:send_message).ordered.with(a_kind_of(LDPMessageKeepalive))
+        allow(mailbox).to receive(:send_message).ordered.with(a_kind_of(LDPPDU))
 
         ldp_state_machine.event(:tcp_connection_confirmed)
         ldp_state_machine.message(mock_ldp_initialise_message)
