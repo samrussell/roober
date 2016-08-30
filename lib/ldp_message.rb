@@ -125,6 +125,7 @@ class LDPMessageInitialization < LDPMessage
 
   MESSAGE_CODE = 0x200
   UNPACK_STRING = 'S>S>L>a*'
+  PACK_STRING = 'S>S>L>'
 
   register_subclass MESSAGE_CODE
 
@@ -144,9 +145,14 @@ class LDPMessageInitialization < LDPMessage
   end
 
   def pack
-    # TODO build
-    raise MethodNotImplementedError
-    #[marker, packet_length, message_type].pack(UNPACK_STRING)
+    message_length = 4 + @data.length
+
+    [
+      MESSAGE_CODE,
+      message_length,
+      message_id,
+    ].pack(PACK_STRING) +
+      @data
   end
 end
 

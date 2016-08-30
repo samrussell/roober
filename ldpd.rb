@@ -7,6 +7,7 @@ require './lib/mailbox'
 require './lib/ldp_pdu'
 require './lib/ldp_message'
 require './lib/ldp_parameter'
+require './lib/ldp_state_machine'
 
 # ruby multicast code taken from https://github.com/ptrv/ruby-multicast-example
 

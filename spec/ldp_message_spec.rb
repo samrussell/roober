@@ -60,14 +60,20 @@ RSpec.describe LDPMessageHello do
 end
 
 RSpec.describe LDPMessageInitialization do
+  let(:packed_message) { "\x02\x00\x00\x16\x00\x00\x00\x01\x05\x00\x00\x0e\x00\x01\x00\xb4\x00\x00\x00\x00\x0a\x00\x01\x01\x00\x00".force_encoding('ASCII-8BIT') }
+  let(:initialization_message) { LDPMessage.build_from_packet(packed_message) }
+  let(:repacked_message) { initialization_message.pack }
   describe '.build_from_packet' do
     context 'initialization message' do
-      let(:packed_message) { "\x02\x00\x00\x16\x00\x00\x00\x01\x05\x00\x00\x0e\x00\x01\x00\xb4\x00\x00\x00\x00\x0a\x00\x01\x01\x00\x00".force_encoding('ASCII-8BIT') }
-      subject(:initialization_message) { LDPMessage.build_from_packet(packed_message) }
-
       it 'unpacks the message' do
         expect(initialization_message.message_id).to eq(1)
       end
+    end
+  end
+
+  describe '#pack' do
+    it 'packs the message' do
+      expect(repacked_message).to eq(packed_message)
     end
   end
 end
