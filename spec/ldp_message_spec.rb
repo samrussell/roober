@@ -77,3 +77,25 @@ RSpec.describe LDPMessageInitialization do
     end
   end
 end
+
+RSpec.describe LDPMessageKeepalive do
+  let(:message_type) { [0x201].pack("S>") }
+  let(:message_length) { [4].pack("S>") }
+  let(:message_id) { [0x3].pack("L>") }
+  let(:packed_message) { message_type + message_length + message_id }
+  let(:keepalive_message) { LDPMessage.build_from_packet(packed_message) }
+  let(:repacked_message) { keepalive_message.pack }
+  describe '.build_from_packet' do
+    context 'keepalive message' do
+      it 'unpacks the message' do
+        expect(keepalive_message.message_id).to eq(3)
+      end
+    end
+  end
+
+  describe '#pack' do
+    it 'packs the message' do
+      expect(repacked_message).to eq(packed_message)
+    end
+  end
+end

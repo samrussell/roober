@@ -161,7 +161,8 @@ class LDPMessageKeepalive < LDPMessage
   end
 
   MESSAGE_CODE = 0x201
-  UNPACK_STRING = 'S>S>L>a*'
+  UNPACK_STRING = 'S>S>L>'
+  PACK_STRING = 'S>S>L>'
 
   register_subclass MESSAGE_CODE
 
@@ -181,8 +182,12 @@ class LDPMessageKeepalive < LDPMessage
   end
 
   def pack
-    # TODO build
-    raise MethodNotImplementedError
-    #[marker, packet_length, message_type].pack(UNPACK_STRING)
+    message_length = 4
+
+    [
+      MESSAGE_CODE,
+      message_length,
+      message_id,
+    ].pack(PACK_STRING)
   end
 end
