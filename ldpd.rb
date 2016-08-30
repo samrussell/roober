@@ -39,12 +39,29 @@ Thread.new do
   end
 end
 
+Thread.new do
+  server = TCPServer.new("10.1.1.1", 646)
+
+  loop do
+    client = server.aceept
+    puts "got connection"
+    ldp_pdu_slicer = IOSlicer.new(client, 10000000000, LDPPDUPacked)
+
+    ldp_pdu_slicer.each do |packed_ldp_pdu|
+      ldp_pdu = LDPPDU.build_from_packet(packed_ldp_pdu)
+      puts ldp_pdu
+    end
+  end
+end
+
+
 socket = UDPSocket.new
 ip_mreq = IPAddr.new("224.0.0.2").hton + IPAddr.new("10.10.10.1").hton
 socket.setsockopt(Socket::IPPROTO_IP, Socket::IP_ADD_MEMBERSHIP, ip_mreq)
 socket.bind(Socket::INADDR_ANY, 646)
 
 loop do
+  # process hellos
   mesg, sender_info = socket.recvfrom(1500)
   sender_ip = sender_info[3]
   puts "received message from #{sender_ip}"
