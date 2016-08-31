@@ -1,4 +1,5 @@
 require './lib/abstract_slice'
+require './lib/ldp_parameter'
 
 class LDPMessagePacked < AbstractSlice
   OFFSET_OF_LENGTH_FIELD = 2
@@ -193,7 +194,7 @@ class LDPMessageKeepalive < LDPMessage
 end
 
 class LDPMessageAddress < LDPMessage
-  class UnpackedLDPMessageAddressData < Struct.new(:message_code, :packet_length, :message_id, :data)
+  class UnpackedLDPMessageAddressData < Struct.new(:message_code, :packet_length, :message_id, :address_list_packed)
   end
 
   MESSAGE_CODE = 0x300
@@ -202,29 +203,32 @@ class LDPMessageAddress < LDPMessage
 
   register_subclass MESSAGE_CODE
 
-  attr_reader :message_id, :data
+  attr_reader :message_id, :address_list
 
-  def initialize(message_id, data)
+  def initialize(message_id, address_list)
     @message_id = message_id
-    @data = data
+    @address_list = address_list
   end
 
   def self.build_from_packet(raw_packet_data)
     unpacked_data = UnpackedLDPMessageAddressData.new(*raw_packet_data.unpack(UNPACK_STRING))
 
+    address_list = LDPParameter.build_from_packet(unpacked_data.address_list_packed)
+
     new(unpacked_data.message_id,
-        unpacked_data.data,
+        address_list
        )
   end
 
   def pack
-    message_length = 4 + (@data && @data.length).to_i
+    address_list_packed = address_list.pack
+    message_length = 4 + address_list_packed.length
 
     [
       MESSAGE_CODE,
       message_length,
       message_id,
     ].pack(PACK_STRING) +
-      @data
+      address_list_packed
   end
 end

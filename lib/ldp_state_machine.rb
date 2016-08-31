@@ -45,7 +45,7 @@ class LDPStateMachine
   end
 
   def generate_reply_to_initialise_message(ldp_initialise_message)
-    initialization_data = "\x05\x00\x00\x0e\x00\x01\x00\xb4\x00\x00\x10\x00\x0a\x02\x02\x02\x00\x00"
+    initialization_data = "\x05\x00\x00\x0e\x00\x01\x00\xb4\x00\x00\x10\x00\x0a\x02\x02\x02\x00\x00".force_encoding('ASCII-8BIT')
     LDPMessageInitialization.new(ldp_initialise_message.message_id, initialization_data)
   end
 

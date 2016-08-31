@@ -1,4 +1,5 @@
 require './lib/abstract_slice'
+require './lib/string_slicer'
 require 'socket'
 require 'ipaddr'
 
