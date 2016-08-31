@@ -191,3 +191,40 @@ class LDPMessageKeepalive < LDPMessage
     ].pack(PACK_STRING)
   end
 end
+
+class LDPMessageAddress < LDPMessage
+  class UnpackedLDPMessageAddressData < Struct.new(:message_code, :packet_length, :message_id, :data)
+  end
+
+  MESSAGE_CODE = 0x300
+  UNPACK_STRING = 'S>S>L>a*'
+  PACK_STRING = 'S>S>L>'
+
+  register_subclass MESSAGE_CODE
+
+  attr_reader :message_id, :data
+
+  def initialize(message_id, data)
+    @message_id = message_id
+    @data = data
+  end
+
+  def self.build_from_packet(raw_packet_data)
+    unpacked_data = UnpackedLDPMessageAddressData.new(*raw_packet_data.unpack(UNPACK_STRING))
+
+    new(unpacked_data.message_id,
+        unpacked_data.data,
+       )
+  end
+
+  def pack
+    message_length = 4 + (@data && @data.length).to_i
+
+    [
+      MESSAGE_CODE,
+      message_length,
+      message_id,
+    ].pack(PACK_STRING) +
+      @data
+  end
+end

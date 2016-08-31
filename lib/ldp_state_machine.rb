@@ -21,6 +21,8 @@ class LDPStateMachine
       handle_initialised_message(ldp_message)
     when :openrec
       handle_openrec_message(ldp_message)
+    when :operational
+      handle_operational_message(ldp_message)
     end
   end
 
@@ -55,5 +57,11 @@ class LDPStateMachine
     if ldp_message.message_type == LDPMessageKeepalive::MESSAGE_CODE
       @state = :operational
     end
+  end
+
+  def handle_operational_message(ldp_message)
+    # just print them for now
+    puts "Received message (operational state)"
+    puts ldp_message.inspect
   end
 end

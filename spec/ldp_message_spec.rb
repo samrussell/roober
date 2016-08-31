@@ -99,3 +99,32 @@ RSpec.describe LDPMessageKeepalive do
     end
   end
 end
+
+RSpec.describe LDPMessageAddress do
+  let(:message_type) { [0x300].pack("S>") }
+  let(:message_length) { [4 + address_tlv.length].pack("S>") }
+  let(:message_id) { [0x3].pack("L>") }
+  let(:address_tlv) {
+    [0x101].pack("S>") +
+    [10].pack("S>") +
+    [1].pack("S>") +
+    [10, 1, 1, 1].pack("CCCC") +
+    [192, 168, 1, 1].pack("CCCC")
+  }
+  let(:packed_message) { message_type + message_length + message_id + address_tlv }
+  let(:address_message) { LDPMessage.build_from_packet(packed_message) }
+  let(:repacked_message) { address_message.pack }
+  describe '.build_from_packet' do
+    context 'address message' do
+      it 'unpacks the message' do
+        expect(address_message.message_id).to eq(3)
+      end
+    end
+  end
+
+  describe '#pack' do
+    it 'packs the message' do
+      expect(repacked_message).to eq(packed_message)
+    end
+  end
+end

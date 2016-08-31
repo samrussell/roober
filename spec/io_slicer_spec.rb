@@ -49,6 +49,7 @@ RSpec.describe IOSlicer do
 
       it { is_expected.to eq(unpacked_data) }
     end
-    #TODO spec error when not enough data to unpack
+    # TODO spec error when not enough data to unpack
+    # TODO slicer gives up when there is nothing left
   end
 end

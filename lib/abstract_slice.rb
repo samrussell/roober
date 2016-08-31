@@ -4,7 +4,7 @@ class AbstractSlice
   end
 
   def call
-    read_initial
+    return nil unless read_initial
 
     read_remainder
 

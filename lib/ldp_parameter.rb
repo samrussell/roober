@@ -65,6 +65,8 @@ class LDPParameterIPv4Address < LDPParameter
   attr_reader :address
 
   def initialize(ip_address_packed)
+    # TODO change from packed to hton
+    # address here is an int, not a string
     @address= IPAddr.new(ip_address_packed, Socket::PF_INET)
   end
 
@@ -76,6 +78,55 @@ class LDPParameterIPv4Address < LDPParameter
     unpacked_data = UnpackedLDPParameterIPv4Address.new(*raw_packet_data.unpack(UNPACK_STRING))
 
     new(unpacked_data.ip_address_packed)
+  end
+end
+
+class LDPParameterAddressList < LDPParameter
+  class UnpackedLDPParameterAddressList < Struct.new(:code, :parameter_length, :family, :address_list_packed)
+  end
+
+  class AddressSlice < AbstractSlice
+    def initial_length
+      4
+    end
+
+    def remainder_length
+      0
+    end
+  end
+
+  PARAMETER_CODE = 0x101
+  UNPACK_STRING = 'S>S>S>a*'
+  PACK_STRING = 'S>S>S>'
+  FAMILY_IPV4 = 1
+
+  register_subclass PARAMETER_CODE
+
+  attr_reader :addresses
+
+  def initialize(addresses)
+    @addresses = addresses
+  end
+
+  def pack
+    packed_addresses = addresses.map(&:hton).join
+    parameter_length = 2 + packed_addresses.length
+
+    [PARAMETER_CODE, parameter_length, FAMILY_IPV4].pack(PACK_STRING) +
+      packed_addresses
+  end
+
+  def self.build_from_packet(raw_packet_data)
+    unpacked_data = UnpackedLDPParameterAddressList.new(*raw_packet_data.unpack(UNPACK_STRING))
+
+    raise Exception("Only support IPv4") unless unpacked_data.family == FAMILY_IPV4
+
+    addresses = StringSlicer.new(unpacked_data.address_list_packed, unpacked_data.parameter_length, AddressSlice).map do |packed_address|
+      address_as_int = packed_address.unpack("L>")[0]
+      IPAddr.new(address_as_int, Socket::PF_INET)
+    end
+
+    new(addresses)
   end
 end
 

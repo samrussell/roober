@@ -27,6 +27,37 @@ RSpec.describe LDPParameterIPv4Address do
   end
 end
 
+RSpec.describe LDPParameterAddressList do
+  let(:code) { [0x0101].pack("S>") }
+  let(:length) { [2 + 4 + 4 + 4].pack("S>") }
+  let(:family) { [1].pack("S>") }
+  let(:address1) { [10, 1, 1, 1].pack("CCCC") }
+  let(:address2) { [192, 168, 2, 25].pack("CCCC") }
+  let(:address3) { [8, 8, 4, 4].pack("CCCC") }
+  let(:addresses) { address1 + address2 + address3 }
+  let(:packed_parameter) { code + length + family + addresses }
+  let(:parameter) { LDPParameter.build_from_packet(packed_parameter) }
+  let(:repacked_parameter) { parameter.pack }
+
+  describe '.build_from_packet' do
+    it 'unpacks the parameter' do
+      expect(parameter.addresses.map(&:to_s)).to eq(
+        [
+          "10.1.1.1",
+          "192.168.2.25",
+          "8.8.4.4"
+        ]
+      )
+    end
+  end
+
+  describe '#pack' do
+    it 'packs the parameter' do
+      expect(repacked_parameter).to eq(packed_parameter)
+    end
+  end
+end
+
 RSpec.describe LDPParameterCommonSession do
   let(:code) { [0x0500].pack("S>") }
   let(:length) { [14].pack("S>") }
