@@ -6,6 +6,31 @@ require 'json'
 
 # TODO shared examples for TLV subclasses
 
+RSpec.describe LDPParameterFEC do
+  # TODO proper packet
+  let(:code) { [0x0401].pack("S>") }
+  let(:length) { [4].pack("S>") }
+  let(:address) { [10, 1, 1, 1].pack("CCCC") }
+  #let(:packed_parameter) { code + length + address }
+  let(:packed_parameter) { "\x01\x00\x00\x08\x02\x00\x01\x1e\x0a\x0a\x0a\x00".force_encoding('ASCII-8BIT') }
+  let(:parameter) { LDPParameter.build_from_packet(packed_parameter) }
+  let(:repacked_parameter) { parameter.pack }
+
+  describe '.build_from_packet' do
+    it 'unpacks the parameter' do
+      expect(parameter.prefixes.count).to eq(1)
+      expect(parameter.prefixes.first.address).to eq(IPAddr.new("10.10.10.0/30"))
+      expect(parameter.prefixes.first.mask).to eq(30)
+    end
+  end
+
+  describe '#pack' do
+    it 'packs the parameter' do
+      expect(repacked_parameter).to eq(packed_parameter)
+    end
+  end
+end
+
 RSpec.describe LDPParameterIPv4Address do
   let(:code) { [0x0401].pack("S>") }
   let(:length) { [4].pack("S>") }

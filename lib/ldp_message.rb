@@ -1,4 +1,5 @@
 require './lib/abstract_slice'
+require './lib/string_slicer'
 require './lib/ldp_parameter'
 
 class LDPMessagePacked < AbstractSlice
@@ -230,5 +231,55 @@ class LDPMessageAddress < LDPMessage
       message_id,
     ].pack(PACK_STRING) +
       address_list_packed
+  end
+end
+
+class LDPMessageLabelMapping < LDPMessage
+  class UnpackedLDPMessageLabelMappingData < Struct.new(:message_code, :packet_length, :message_id, :parameters_packed)
+  end
+
+  MESSAGE_CODE = 0x400
+  UNPACK_STRING = 'S>S>L>a*'
+  PACK_STRING = 'S>S>L>'
+
+  register_subclass MESSAGE_CODE
+
+  attr_reader :message_id
+
+  def initialize(message_id, fec_parameter, other_parameter_packed)
+    @message_id = message_id
+    @fec_parameter = fec_parameter
+    @other_parameter_packed = other_parameter_packed
+  end
+
+  def prefixes
+    @fec_parameter.prefixes
+  end
+
+  def self.build_from_packet(raw_packet_data)
+    unpacked_data = UnpackedLDPMessageLabelMappingData.new(*raw_packet_data.unpack(UNPACK_STRING))
+
+    raw_parameters = StringSlicer.new(unpacked_data.parameters_packed, unpacked_data.parameters_packed.length, LDPParameterPacked).to_a
+
+    fec_parameter = LDPParameter.build_from_packet(raw_parameters[0])
+
+    other_parameter_packed = raw_parameters[1]
+
+    new(unpacked_data.message_id,
+        fec_parameter,
+        other_parameter_packed
+       )
+  end
+
+  def pack
+    parameters_packed = @fec_parameter.pack + @other_parameter_packed
+    message_length = 4 + parameters_packed.length
+
+    [
+      MESSAGE_CODE,
+      message_length,
+      message_id,
+    ].pack(PACK_STRING) +
+      parameters_packed
   end
 end

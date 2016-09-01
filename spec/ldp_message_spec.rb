@@ -118,6 +118,39 @@ RSpec.describe LDPMessageAddress do
     context 'address message' do
       it 'unpacks the message' do
         expect(address_message.message_id).to eq(3)
+        expect(address_message.address_list.addresses.map(&:to_s)).to eq(["10.1.1.1", "192.168.1.1"])
+      end
+    end
+  end
+
+  describe '#pack' do
+    it 'packs the message' do
+      expect(repacked_message).to eq(packed_message)
+    end
+  end
+end
+
+RSpec.describe LDPMessageLabelMapping do
+  # 0400
+  # 0018
+  # 00000a4e
+  # 010000080200011e0a0a0a00
+  # 0200000400000003
+  let(:message_type) { [0x400].pack("S>") }
+  let(:message_length) { [24].pack("S>") }
+  let(:message_id) { [0x3].pack("L>") }
+  # TODO build properly
+  let(:body) { "\x01\x00\x00\x08\x02\x00\x01\x1e\x0a\x0a\x0a\x00\x02\x00\x00\x04\x00\x00\x00\x03" }
+  let(:packed_message) { message_type + message_length + message_id + body }
+  let(:label_message) { LDPMessage.build_from_packet(packed_message) }
+  let(:repacked_message) { label_message.pack }
+  describe '.build_from_packet' do
+    context 'label message' do
+      it 'unpacks the message' do
+        expect(label_message.message_id).to eq(3)
+        expect(label_message.prefixes.first.address).to eq(IPAddr.new("10.10.10.0/30"))
+        expect(label_message.prefixes.first.mask).to eq(30)
+        expect(label_message.label).to eq(3)
       end
     end
   end

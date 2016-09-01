@@ -52,6 +52,49 @@ class LDPParameter
   end
 end
 
+class LDPParameterFEC < LDPParameter
+  class UnpackedLDPParameterFEC < Struct.new(:code, :parameter_length, :prefixes_packed)
+  end
+
+  class Prefix < Struct.new(:address, :mask)
+  end
+
+  PARAMETER_CODE = 0x100
+  UNPACK_STRING = 'S>S>a*'
+  PACK_STRING = 'S>S>'
+
+  register_subclass PARAMETER_CODE
+
+  attr_reader :prefixes
+
+  def initialize(prefixes)
+    @prefixes = prefixes
+  end
+
+  def pack
+    prefixes_packed = prefixes.map do |prefix|
+      [2, 1, prefix.mask, prefix.address.to_i].pack("CS>CL>")
+    end.join
+
+    [PARAMETER_CODE, prefixes_packed.length].pack(PACK_STRING) +
+      prefixes_packed
+  end
+
+  def self.build_from_packet(raw_packet_data)
+    unpacked_data = UnpackedLDPParameterFEC.new(*raw_packet_data.unpack(UNPACK_STRING))
+
+    prefixes = unpacked_data.prefixes_packed.chars.each_slice(8).map do |prefix_packed|
+      type, family, mask, address_packed = prefix_packed.join.unpack("CS>CL>")
+      raise Exception "Don't support this type" unless type == 2
+      raise Exception "Don't support this family" unless family == 1
+
+      Prefix.new(IPAddr.new(address_packed, Socket::PF_INET), mask)
+    end
+
+    new(prefixes)
+  end
+end
+
 class LDPParameterIPv4Address < LDPParameter
   class UnpackedLDPParameterIPv4Address < Struct.new(:code, :parameter_length, :ip_address_packed)
   end
