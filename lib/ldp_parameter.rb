@@ -95,6 +95,34 @@ class LDPParameterFEC < LDPParameter
   end
 end
 
+class LDPParameterLabel < LDPParameter
+  class UnpackedLDPParameterLabel < Struct.new(:code, :parameter_length, :label)
+  end
+
+  PARAMETER_CODE = 0x200
+  UNPACK_STRING = 'S>S>L>'
+  PACK_STRING = 'S>S>L>'
+  DEFAULT_LENGTH = 4
+
+  register_subclass PARAMETER_CODE
+
+  attr_reader :label
+
+  def initialize(label)
+    @label = label
+  end
+
+  def pack
+    [PARAMETER_CODE, DEFAULT_LENGTH, label].pack(PACK_STRING)
+  end
+
+  def self.build_from_packet(raw_packet_data)
+    unpacked_data = UnpackedLDPParameterLabel.new(*raw_packet_data.unpack(UNPACK_STRING))
+
+    new(unpacked_data.label)
+  end
+end
+
 class LDPParameterIPv4Address < LDPParameter
   class UnpackedLDPParameterIPv4Address < Struct.new(:code, :parameter_length, :ip_address_packed)
   end

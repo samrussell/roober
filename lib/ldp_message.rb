@@ -246,14 +246,18 @@ class LDPMessageLabelMapping < LDPMessage
 
   attr_reader :message_id
 
-  def initialize(message_id, fec_parameter, other_parameter_packed)
+  def initialize(message_id, fec_parameter, label_parameter)
     @message_id = message_id
     @fec_parameter = fec_parameter
-    @other_parameter_packed = other_parameter_packed
+    @label_parameter = label_parameter
   end
 
   def prefixes
     @fec_parameter.prefixes
+  end
+
+  def label
+    @label_parameter.label
   end
 
   def self.build_from_packet(raw_packet_data)
@@ -262,17 +266,16 @@ class LDPMessageLabelMapping < LDPMessage
     raw_parameters = StringSlicer.new(unpacked_data.parameters_packed, unpacked_data.parameters_packed.length, LDPParameterPacked).to_a
 
     fec_parameter = LDPParameter.build_from_packet(raw_parameters[0])
-
-    other_parameter_packed = raw_parameters[1]
+    label_parameter = LDPParameter.build_from_packet(raw_parameters[1])
 
     new(unpacked_data.message_id,
         fec_parameter,
-        other_parameter_packed
+        label_parameter
        )
   end
 
   def pack
-    parameters_packed = @fec_parameter.pack + @other_parameter_packed
+    parameters_packed = @fec_parameter.pack + @label_parameter.pack
     message_length = 4 + parameters_packed.length
 
     [

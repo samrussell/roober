@@ -31,6 +31,25 @@ RSpec.describe LDPParameterFEC do
   end
 end
 
+RSpec.describe LDPParameterLabel do
+  # TODO proper packet
+  let(:packed_parameter) { "\x02\x00\x00\x04\x00\x00\x00\x03".force_encoding('ASCII-8BIT') }
+  let(:parameter) { LDPParameter.build_from_packet(packed_parameter) }
+  let(:repacked_parameter) { parameter.pack }
+
+  describe '.build_from_packet' do
+    it 'unpacks the parameter' do
+      expect(parameter.label).to eq(3)
+    end
+  end
+
+  describe '#pack' do
+    it 'packs the parameter' do
+      expect(repacked_parameter).to eq(packed_parameter)
+    end
+  end
+end
+
 RSpec.describe LDPParameterIPv4Address do
   let(:code) { [0x0401].pack("S>") }
   let(:length) { [4].pack("S>") }
