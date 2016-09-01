@@ -29,6 +29,8 @@ class LDPStateMachine
   private
 
   def handle_initialised_message(ldp_message)
+    puts "Received message (initialised state)"
+    puts ldp_message.inspect
     if ldp_message.message_type == LDPMessageInitialization::MESSAGE_CODE
       messages = [
         generate_reply_to_initialise_message(ldp_message),
@@ -54,6 +56,8 @@ class LDPStateMachine
   end
 
   def handle_openrec_message(ldp_message)
+    puts "Received message (openrec state)"
+    puts ldp_message.inspect
     if ldp_message.message_type == LDPMessageKeepalive::MESSAGE_CODE
       @state = :operational
     end

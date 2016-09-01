@@ -54,9 +54,7 @@ Thread.new do
 
     ldp_pdu_slicer.each do |packed_ldp_pdu|
       ldp_pdu = LDPPDU.build_from_packet(packed_ldp_pdu)
-      puts ldp_pdu.inspect
       ldp_pdu.messages.each do |ldp_message|
-        puts ldp_message.inspect
         ldp_state_machine.message(ldp_message)
       end
     end
@@ -73,7 +71,7 @@ loop do
   # process hellos
   mesg, sender_info = socket.recvfrom(1500)
   sender_ip = sender_info[3]
-  puts "received message from #{sender_ip}"
+  puts "received hello message from #{sender_ip}"
   pdu = LDPPDU.build_from_packet(mesg)
   puts pdu.inspect
 end
