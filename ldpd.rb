@@ -59,7 +59,7 @@ Thread.new do
 
     pdu = LDPPDU.new(1, 0x0a010101, 0, [label_mapping_message])
 
-    @mailbox.send_message(pdu)
+    mailbox.send_message(pdu)
 
     ldp_pdu_slicer.each do |packed_ldp_pdu|
       ldp_pdu = LDPPDU.build_from_packet(packed_ldp_pdu)
