@@ -39,6 +39,7 @@ class LDPMessage
   def self.build_from_packet(raw_packet_data)
     message_type, = raw_packet_data.unpack(UNPACK_STRING)
     check_header_is_valid(raw_packet_data)
+    puts "Message #{message_type} not implemented!" unless @@subclasses[message_type]
     @@subclasses[message_type].build_from_packet(raw_packet_data)
   end
 
