@@ -67,6 +67,13 @@ RSpec.describe LDPMessageInitialization do
     context 'initialization message' do
       it 'unpacks the message' do
         expect(initialization_message.message_id).to eq(1)
+        expect(initialization_message.protocol_version).to eq(1)
+        expect(initialization_message.keepalive_time).to eq(180)
+        expect(initialization_message.flags).to eq(0)
+        expect(initialization_message.path_vector_limit).to eq(0)
+        expect(initialization_message.max_pdu_length).to eq(0)
+        expect(initialization_message.lsr_id.to_s).to eq("10.0.1.1")
+        expect(initialization_message.label_space_id).to eq(0)
       end
     end
   end

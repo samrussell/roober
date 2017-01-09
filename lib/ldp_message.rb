@@ -122,7 +122,7 @@ class LDPMessageHello < LDPMessage
 end
 
 class LDPMessageInitialization < LDPMessage
-  class UnpackedLDPMessageInitializationData < Struct.new(:message_code, :packet_length, :message_id, :data)
+  class UnpackedLDPMessageInitializationData < Struct.new(:message_code, :packet_length, :message_id, :common_session_parameters_packed)
   end
 
   MESSAGE_CODE = 0x200
@@ -131,30 +131,61 @@ class LDPMessageInitialization < LDPMessage
 
   register_subclass MESSAGE_CODE
 
-  attr_reader :message_id, :data
+  attr_reader :message_id
 
-  def initialize(message_id, data)
+  def initialize(message_id, common_session_parameters)
     @message_id = message_id
-    @data = data
+    @common_session_parameters = common_session_parameters
+  end
+
+  def protocol_version
+    @common_session_parameters.protocol_version
+  end
+
+  def keepalive_time
+    @common_session_parameters.keepalive_time
+  end
+
+  def flags
+    @common_session_parameters.flags
+  end
+
+  def path_vector_limit
+    @common_session_parameters.path_vector_limit
+  end
+
+  def max_pdu_length
+    @common_session_parameters.max_pdu_length
+  end
+
+  def lsr_id
+    @common_session_parameters.lsr_id
+  end
+
+  def label_space_id
+    @common_session_parameters.label_space_id
   end
 
   def self.build_from_packet(raw_packet_data)
     unpacked_data = UnpackedLDPMessageInitializationData.new(*raw_packet_data.unpack(UNPACK_STRING))
 
+    common_session_parameters = LDPParameter.build_from_packet(unpacked_data.common_session_parameters_packed)
+
     new(unpacked_data.message_id,
-        unpacked_data.data,
+        common_session_parameters,
        )
   end
 
   def pack
-    message_length = 4 + (@data && @data.length).to_i
+    common_session_parameters_packed = @common_session_parameters.pack
+    message_length = 4 + common_session_parameters_packed.length
 
     [
       MESSAGE_CODE,
       message_length,
       message_id,
     ].pack(PACK_STRING) +
-      @data
+      common_session_parameters_packed
   end
 end
 
