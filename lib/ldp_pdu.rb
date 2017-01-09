@@ -52,6 +52,11 @@ class LDPPDU
   def self.unpack_messages(packed_messages)
     packed_message_stream = StringIO.new(packed_messages)
     message_slicer = IOSlicer.new(packed_message_stream, packed_messages.length, LDPMessagePacked)
-    message_slicer.map { |packed_ldp_message| LDPMessage.build_from_packet(packed_ldp_message) }
+    begin
+      message_slicer.map { |packed_ldp_message| LDPMessage.build_from_packet(packed_ldp_message) }
+    rescue NoMethodError => error
+      puts error
+      raise error
+    end
   end
 end
