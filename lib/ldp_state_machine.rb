@@ -60,6 +60,15 @@ class LDPStateMachine
     puts ldp_message.inspect
     if ldp_message.message_type == LDPMessageKeepalive::MESSAGE_CODE
       @state = :operational
+
+      # start by sending a label
+      label_mapping_message = LDPMessageLabelMapping.new(1,
+        LDPParameterFEC.new([LDPParameterFEC::Prefix.new(IPAddr.new("10.1.1.4", Socket::PF_INET), 32)]),
+        LDPParameterLabel.new(17))
+
+      pdu = LDPPDU.new(1, 0x0a010101, 0, [label_mapping_message])
+
+      @mailbox.send_message(pdu)
     end
   end
 

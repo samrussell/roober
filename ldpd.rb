@@ -52,15 +52,6 @@ Thread.new do
     ldp_state_machine.event(:tcp_connection_confirmed)
     ldp_pdu_slicer = IOSlicer.new(client, 10000000000, LDPPDUPacked)
 
-    # start by sending a label
-    label_mapping_message = LDPMessageLabelMapping.new(1,
-      LDPParameterFEC.new([LDPParameterFEC::Prefix.new(IPAddr.new("10.1.1.4", Socket::PF_INET), 32)]),
-      LDPParameterLabel.new(17))
-
-    pdu = LDPPDU.new(1, 0x0a010101, 0, [label_mapping_message])
-
-    mailbox.send_message(pdu)
-
     ldp_pdu_slicer.each do |packed_ldp_pdu|
       ldp_pdu = LDPPDU.build_from_packet(packed_ldp_pdu)
       ldp_pdu.messages.each do |ldp_message|
